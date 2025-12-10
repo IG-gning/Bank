@@ -1,6 +1,6 @@
 // app/Paiement/FormPaiement.jsx
 import React, { useState } from "react";
-import {  View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList,} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, ScrollView} from "react-native";
  
 const sampleBeneficiaires = [
   { nom: "EDF", type: "Mobile ****1111", emoji: "📱" },
@@ -56,7 +56,7 @@ export default function FormPayments({ initialType = "paiement", onConfirm }) {
   };
 
   return (
-    <View>
+    <ScrollView>
       {/* menu */}
       <View style={styles.menuRow}>
         <TouchableOpacity onPress={() => setActiveForm("paiement")}><Text style={[styles.menuItem, activeForm==="paiement" && styles.menuActive]}>Paiement</Text></TouchableOpacity>
@@ -147,7 +147,7 @@ export default function FormPayments({ initialType = "paiement", onConfirm }) {
           />
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 }
 

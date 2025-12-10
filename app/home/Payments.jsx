@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { 
-  View, Text, TouchableOpacity, Modal, TextInput, StyleSheet, FlatList, ScrollView 
-} from "react-native";
+import { View, Text, TouchableOpacity, Modal, TextInput, StyleSheet, FlatList, ScrollView } from "react-native";
+
+
 import Header from "../components/Header";
 import MobileNav from "../components/MobileNav";
 import FormPayments from "../components/FormPayments";
@@ -13,7 +13,7 @@ function PaymentForm({ type, onConfirm, onClose }) {
   const [facture, setFacture] = useState("");
 
   return (
-    <View>
+    <ScrollView>
       <View style={styles.formHeader}>
         <Text style={styles.formTitle}>{type}</Text>
         <Text style={styles.formSubtitle}>Paiement de facture</Text>
@@ -51,7 +51,7 @@ function PaymentForm({ type, onConfirm, onClose }) {
       <TouchableOpacity onPress={onClose} style={styles.cancelBtn}>
         <Text style={styles.cancelText}>Annuler</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 

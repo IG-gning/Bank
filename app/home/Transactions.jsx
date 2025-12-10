@@ -26,39 +26,25 @@ export default function Transactions() {
 
   // ------- RENDER ITEM --------
   const renderItem = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.transactionCard} 
-      onPress={() => navigation.navigate("TransactionDetails", { transaction: item })}
-    >
-      <View style={styles.iconContainer}>
-        <FontAwesome5 name={item.icon} size={20} color="#6b5a49" />
-      </View>
+    <TouchableOpacity style={styles.transactionCard} 
+      onPress={() => navigation.navigate("TransactionDetails", { transaction: item })}>
+    
+        <View style={styles.iconContainer}> <FontAwesome5 name={item.icon} size={20} color="#6b5a49" /> </View>
 
-      <View style={styles.transactionInfo}>
-        <Text style={styles.transactionTitle} numberOfLines={1}>
-          {item.title}
-          <Text
-            style={[
-              styles.statusBadge,
-              item.status === "Complété" ? styles.completed : styles.pending,
-            ]}
-          >
-            {"  "}{item.status}
+        <View style={styles.transactionInfo}>
+          <Text style={styles.transactionTitle} numberOfLines={1}> {item.title}  
+              <Text style={[ styles.statusBadge, item.status === "Complété" ? styles.completed : styles.pending,]}>
+                {"  "}{item.status} 
+              </Text>
           </Text>
+          <Text style={styles.transactionSubtitle}> {item.date} • {item.category} </Text>
+        </View>
+
+        <Text style={[ styles.transactionAmount, item.amount > 0 ? styles.positive : styles.negative]}>
+              {item.amount > 0 ? "+" : ""}
+              {item.amount.toFixed(2)} €
         </Text>
 
-        <Text style={styles.transactionSubtitle}>
-          {item.date} • {item.category}
-        </Text>
-      </View>
-
-      <Text style={[
-        styles.transactionAmount,
-        item.amount > 0 ? styles.positive : styles.negative
-      ]}>
-        {item.amount > 0 ? "+" : ""}
-        {item.amount.toFixed(2)} €
-      </Text>
     </TouchableOpacity>
   );
 
@@ -70,47 +56,46 @@ export default function Transactions() {
 
       {/* CARDS */}
       <View style={styles.cardsContainer}>
+
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>
-            Total Transactions : <Text style={styles.cardValue}>{transactions.length}</Text>
-          </Text>
-          <Text style={styles.cardSubtitle}>Ce mois</Text>
+            <Text style={styles.cardTitle}> 
+              Total Transactions : <Text style={styles.cardValue}> {transactions.length} </Text>
+            </Text>
+            <Text style={styles.cardSubtitle}> Ce mois </Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>
-            Total Revenus : <Text style={styles.revenue}>+{totalRevenus.toFixed(2)} €</Text>
-          </Text>
-          <Text style={styles.cardSubtitle}>Ce mois</Text>
+            <Text style={styles.cardTitle}>
+              Total Revenus : <Text style={styles.revenue}> +{totalRevenus.toFixed(2)} € </Text>
+            </Text>
+            <Text style={styles.cardSubtitle}> Ce mois </Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>
-            Total Dépenses : <Text style={styles.expense}>{totalDepenses.toFixed(2)} €</Text>
-          </Text>
-          <Text style={styles.cardSubtitle}>Ce mois</Text>
+            <Text style={styles.cardTitle}>
+              Total Dépenses : <Text style={styles.expense}> {totalDepenses.toFixed(2)} € </Text>
+            </Text>
+            <Text style={styles.cardSubtitle}> Ce mois </Text>
         </View>
+
       </View>
 
       {/* LISTE */}
-      <Text style={styles.listTitle}>
-        Liste des transactions ({transactions.length})
-      </Text>
-
+      <Text style={styles.listTitle}> </Text>
+        
       <FlatList
         data={transactions.slice(0, visibleCount)}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
-        scrollEnabled={false}
-      />
+        scrollEnabled={false}/>
+      
 
-      <TouchableOpacity
-        style={styles.showMoreBtn}
+      <TouchableOpacity style={styles.showMoreBtn}
         onPress={() => {
           setIsExpanded(!isExpanded);
           setVisibleCount(isExpanded ? 3 : transactions.length);
-        }}
-      >
+        }}>
+      
         <Text style={styles.showMoreText}>
           {isExpanded ? "Masquer" : "Voir +"}
         </Text>
