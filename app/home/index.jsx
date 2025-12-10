@@ -259,6 +259,7 @@ import Sidebar from "../components/Sidebar";
 export default function Home() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState("dashboard"); // <-- Etat page courante
 
   return (
     <View

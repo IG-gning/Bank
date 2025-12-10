@@ -1,105 +1,91 @@
-// app/home/index.jsx
-import React, { useState } from "react";
-import { View, Text, ScrollView, StyleSheet } from "react-native";
+// app/components/Sidebar.jsx
+import React, { useRef, useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Animated, Image } from "react-native";
+import { Wallet, CreditCard, Receipt, Settings, LogOut, HelpCircle, User } from "lucide-react-native";
 
-// Composants locaux
-import Header from "../components/Header";
-import MobileNav from "../components/MobileNav";
-import Sidebar from "../components/Sidebar";
+const { width } = Dimensions.get("window");
 
-// Pages à afficher
-import Profile from "../home/Profile";
-import Transactions from "../home/Transactions";
+export default function Sidebar({ visible, onClose, isDarkMode, onNavigate }) {
+  const slideAnim = useRef(new Animated.Value(-width)).current;
+  const [show, setShow] = useState(visible);
 
-export default function Home() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState("dashboard"); // dashboard / profile / transactions
-
-  // Fonction pour afficher la bonne page
-  const renderPage = () => {
-    switch (currentPage) {
-      case "profile":
-        return <Profile isDarkMode={isDarkMode} />;
-      case "transactions":
-        return <Transactions isDarkMode={isDarkMode} />;
-      default:
-        return (
-          <View>
-            <Text
-              style={{
-                fontSize: 28,
-                fontWeight: "700",
-                marginBottom: 10,
-                color: isDarkMode ? "#f3e8d7" : "#3b322a",
-              }}
-            >
-              Bienvenue 👋
-            </Text>
-            <Text
-              style={{
-                fontSize: 16,
-                color: isDarkMode ? "#bfa98a" : "#3b322a80",
-                marginBottom: 20,
-              }}
-            >
-              Voici un aperçu de votre tableau de bord.
-            </Text>
-
-            {/* Exemple de carte */}
-            <View
-              style={[
-                styles.card,
-                { backgroundColor: isDarkMode ? "#1a2742" : "#d6c7b4" },
-              ]}
-            >
-              <Text style={{ fontSize: 18, color: "#fff" }}>Solde Total</Text>
-              <Text style={{ fontSize: 28, fontWeight: "700", color: "#fff" }}>
-                24 580 €
-              </Text>
-            </View>
-          </View>
-        );
+  useEffect(() => {
+    if (visible) {
+      setShow(true);
+      Animated.timing(slideAnim, { toValue: 0, duration: 280, useNativeDriver: false }).start();
+    } else {
+      Animated.timing(slideAnim, { toValue: -width, duration: 280, useNativeDriver: false }).start(() => setShow(false));
     }
+  }, [visible]);
+
+  if (!show) return null;
+
+  const COLORS = {
+    bg: isDarkMode ? "#141829" : "#eadfcf",
+    text: isDarkMode ? "#f3e8d7" : "#3b322a",
+    accent: isDarkMode ? "#bfa98a" : "#5b4636",
+    divider: isDarkMode ? "#ffffff20" : "#00000015",
   };
 
+  const menu = [
+    { label: "Mon Profil", icon: User, page: "profile" },
+    { label: "Wallet", icon: Wallet, page: "dashboard" },
+    { label: "Transactions", icon: Receipt, page: "transactions" },
+    { label: "Mes Cartes", icon: CreditCard, page: "cards" },
+    { label: "Paramètres", icon: Settings, page: "settings" },
+  ];
+
   return (
-    <View style={[styles.container, { backgroundColor: isDarkMode ? "#141829" : "#f3e8d7" }]}>
-      {/* Sidebar */}
-      <Sidebar
-        visible={sidebarOpen}
-        isDarkMode={isDarkMode}
-        onClose={() => setSidebarOpen(false)}
-        onNavigate={(page) => {
-          setCurrentPage(page);
-          setSidebarOpen(false);
-        }}
-      />
+    <View style={styles.overlay}>
+      <TouchableOpacity style={styles.background} onPress={onClose} activeOpacity={1} />
 
-      {/* Header */}
-      <Header
-        isDarkMode={isDarkMode}
-        onToggleTheme={() => setIsDarkMode(!isDarkMode)}
-        onMenuPress={() => setSidebarOpen(true)}
-      />
+      <Animated.View style={[styles.sidebar, { backgroundColor: COLORS.bg, left: slideAnim }]}>
+        <View style={styles.profileSection}>
+          <Image source={{ uri: "https://i.pravatar.cc/300" }} style={styles.avatar} />
+          <View>
+            <Text style={[styles.profileName, { color: COLORS.text }]}>Mouhamed Ndiaye</Text>
+            <Text style={[styles.profileEmail, { color: COLORS.accent }]}>mouhamed@example.com</Text>
+          </View>
+        </View>
 
-      {/* Contenu principal */}
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {renderPage()}
-      </ScrollView>
+        <View style={[styles.divider, { backgroundColor: COLORS.divider }]} />
 
-      {/* Navigation mobile */}
-      <MobileNav currentPage={currentPage} isDarkMode={isDarkMode} />
+        {menu.map((item, i) => (
+          <TouchableOpacity
+            key={i}
+            style={styles.menuItem}
+            onPress={() => item.page && onNavigate(item.page)}
+          >
+            <item.icon color={COLORS.accent} size={20} />
+            <Text style={[styles.menuText, { color: COLORS.text }]}>{item.label}</Text>
+          </TouchableOpacity>
+        ))}
+
+        <View style={[styles.divider, { backgroundColor: COLORS.divider }]} />
+
+        <TouchableOpacity style={styles.menuItem}>
+          <HelpCircle color={COLORS.accent} size={20} />
+          <Text style={[styles.menuText, { color: COLORS.text }]}>Support & Aide</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.menuItem, { marginTop: 30 }]}>
+          <LogOut color={"#d9534f"} size={22} />
+          <Text style={[styles.menuText, { color: "#d9534f" }]}>Se déconnecter</Text>
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 100 },
-  card: {
-    borderRadius: 16,
-    padding: 20,
-    marginTop: 20,
-  },
+  overlay: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 999, flexDirection: "row" },
+  background: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "#00000050" },
+  sidebar: { width: width * 0.7, height: "100%", paddingVertical: 40, paddingHorizontal: 20, paddingTop: 40, position: "absolute", zIndex: 1000 },
+  profileSection: { flexDirection: "row", alignItems: "center", marginBottom: 2, paddingTop: 70 },
+  avatar: { width: 55, height: 55, borderRadius: 100, marginRight: 12 },
+  profileName: { fontSize: 18, fontWeight: "700" },
+  profileEmail: { fontSize: 13, marginTop: 2 },
+  divider: { width: "100%", height: 1, marginVertical: 18 },
+  menuItem: { flexDirection: "row", alignItems: "center", paddingVertical: 14 },
+  menuText: { fontSize: 16, marginLeft: 14, fontWeight: "500" },
 });
