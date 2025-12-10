@@ -1,5 +1,5 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { useState } from "react";
+import { View, Text , TextInput, TouchableOpacity,StyleSheet, } from "react-native";
 import Header from "../components/Header";
 import MobileNav from "../components/MobileNav";
 
