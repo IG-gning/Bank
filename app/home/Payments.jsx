@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { 
-  View, Text, TouchableOpacity, Modal, TextInput, StyleSheet, FlatList, ScrollView 
-} from "react-native";
+import { View, Text, TouchableOpacity, Modal, TextInput, StyleSheet, FlatList, ScrollView } from "react-native";
+  
+
 import Header from "../components/Header";
 import MobileNav from "../components/MobileNav";
 import FormPayments from "../components/FormPayments";

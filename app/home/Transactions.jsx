@@ -84,6 +84,8 @@ export default function Transactions() {
       {/* LISTE */}
       <Text style={styles.listTitle}> </Text>
         
+      
+
       <FlatList
         data={transactions.slice(0, visibleCount)}
         renderItem={renderItem}
