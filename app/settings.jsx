@@ -10,12 +10,12 @@ import {
 import { FontAwesome } from "@expo/vector-icons";
 
 // Components
-import Header from "../components/Header";
-import MobileNav from "../components/MobileNav";
-import Sidebar from "../components/Sidebar";
+import Header from "./components/Header";
+import MobileNav from "./components/MobileNav";
+import Sidebar from "./components/Sidebar";
 
 // Theme Context
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "./context/ThemeContext";
 
 export default function ProfilePage({ onNavigate, currentPage }) {
   const { isDarkMode, toggleTheme } = useTheme();
@@ -33,14 +33,7 @@ export default function ProfilePage({ onNavigate, currentPage }) {
   const [emailNotif, setEmailNotif] = useState(true);
 
   // Définir les couleurs en fonction du mode
-  const colors = {
-    bg: isDarkMode ? "#141829" : "#f7f5f2",
-    card: isDarkMode ? "#1a2742" : "#fff",
-    text: isDarkMode ? "#f3e8d7" : "#000",
-    soft: isDarkMode ? "#bfa98a" : "#666",
-    border: isDarkMode ? "#2c3a5a" : "#ddd",
-    primary: "#6b5a49",
-  };
+ const { colors } = useTheme();
 
   const handleChange = (key, value) => {
     setUser({ ...user, [key]: value });

@@ -11,10 +11,10 @@ export default function MobileNav({ isDarkMode }) {
 
   const navItems = [
     { id: "home", label: "Home", icon: <Ionicons name="home-outline" size={24} /> , path: "/home"},
-    { id: "transactions", label: "Transactions", icon: <FontAwesome5 name="file-invoice-dollar" size={24} />, path: "/home/Transactions"},
+    // { id: "transactions", label: "Transactions", icon: <FontAwesome5 name="file-invoice-dollar" size={24} />, path: "/home/Transactions"},
     { id: "transfer", label: "Transfert", icon: <MaterialCommunityIcons name="swap-horizontal-bold" size={24} />, path: "/home/Transfer"},
     { id: "payments", label: "Paiement", icon: <MaterialCommunityIcons name="credit-card-outline" size={24} />, path: "/home/Payments"},
-    { id: "profile", label: "Profil", icon: <Feather name="user" size={24} />, path: "/home/Profile"},
+    // { id: "profile", label: "Profil", icon: <Feather name="user" size={24} />, path: "/home/Profile"},
   ];
 
   const renderButton = (item) => {

@@ -1,11 +1,12 @@
-// app/components/Sidebar.jsx
 import React, { useRef, useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Animated, Image } from "react-native";
 import { Wallet, CreditCard, Receipt, Settings, LogOut, HelpCircle, User } from "lucide-react-native";
+import { useRouter } from "expo-router";
 
 const { width } = Dimensions.get("window");
 
-export default function Sidebar({ visible, onClose, isDarkMode, onNavigate }) {
+export default function Sidebar({ visible, onClose, isDarkMode }) {
+  const router = useRouter();
   const slideAnim = useRef(new Animated.Value(-width)).current;
   const [show, setShow] = useState(visible);
 
@@ -27,9 +28,9 @@ export default function Sidebar({ visible, onClose, isDarkMode, onNavigate }) {
     divider: isDarkMode ? "#ffffff20" : "#00000015",
   };
 
+  // Menu mis à jour (wallet supprimé, profil-simple ajouté)
   const menu = [
-    { label: "Mon Profil", icon: User, page: "profile" },
-    { label: "Wallet", icon: Wallet, page: "dashboard" },
+    { label: "Mon Profil", icon: User, page: "profile-simple" },
     { label: "Transactions", icon: Receipt, page: "transactions" },
     { label: "Mes Cartes", icon: CreditCard, page: "cards" },
     { label: "Paramètres", icon: Settings, page: "settings" },
@@ -54,7 +55,10 @@ export default function Sidebar({ visible, onClose, isDarkMode, onNavigate }) {
           <TouchableOpacity
             key={i}
             style={styles.menuItem}
-            onPress={() => item.page && onNavigate(item.page)}
+            onPress={() => {
+              router.push(item.page); // <-- utilise la navigation expo-router
+              onClose(); // ferme le sidebar
+            }}
           >
             <item.icon color={COLORS.accent} size={20} />
             <Text style={[styles.menuText, { color: COLORS.text }]}>{item.label}</Text>

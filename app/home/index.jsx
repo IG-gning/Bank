@@ -248,6 +248,7 @@
 //   smallCardLight: { backgroundColor: "#f3e8d7" },
 // });
 import React, { useState } from "react";
+import { useRouter } from "expo-router";
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 import { LineChart, BarChart } from "react-native-chart-kit";
 import Header from "../components/Header";
@@ -263,6 +264,11 @@ export default function Home() {
   const { isDarkMode, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showTotal, setShowTotal] = useState(true);
+  const router = useRouter();
+  const onNavigate = (page) => {
+    console.log("Naviguer vers", page);
+    router.push(`/home/${page}`);
+};
 
   // Données exemple
   const revenue = [5000, 6000, 5500, 7000, 6500, 7200];
