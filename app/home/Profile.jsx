@@ -18,14 +18,11 @@ export default function ProfilePage() {
 
   const [isEditing, setIsEditing] = useState(false);
 
-
   //  Paramètres
-
   const [twoFA, setTwoFA] = useState(false);
   const [emailNotif, setEmailNotif] = useState(true);
   const [lightMode, setLightMode] = useState(true);
 
- 
   //  Gestion modifications
 
   const handleChange = (key, value) => {
