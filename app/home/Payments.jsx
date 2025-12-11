@@ -4,46 +4,53 @@ import { View, Text, TouchableOpacity, Modal, TextInput, StyleSheet, FlatList, S
 
 import Header from "../components/Header";
 import MobileNav from "../components/MobileNav";
-import FormPayments from "../components/FormPayments";
+import Sidebar from "../components/Sidebar";
+import { useTheme } from "../context/ThemeContext";
 
 // ---------- FORMULAIRE DE PAIEMENT ----------
-function PaymentForm({ type, onConfirm, onClose }) {
+function PaymentForm({ type, onConfirm, onClose, isDarkMode }) {
   const [fournisseur, setFournisseur] = useState("");
   const [montant, setMontant] = useState("");
   const [facture, setFacture] = useState("");
 
   return (
-    <ScrollView>
+    <View style={{ padding: 10, backgroundColor: isDarkMode ? "#141829" : "#fff" }}>
       <View style={styles.formHeader}>
-        <Text style={styles.formTitle}>{type}</Text>
-        <Text style={styles.formSubtitle}>Paiement de facture</Text>
+        <Text style={[styles.formTitle, { color: isDarkMode ? "#f3e8d7" : "#000" }]}>{type}</Text>
+        <Text style={[styles.formSubtitle, { color: isDarkMode ? "#bfa98a" : "#666" }]}>Paiement de facture</Text>
       </View>
 
-      <Text style={styles.label}>Fournisseur</Text>
-      <TextInput value={fournisseur} onChangeText={setFournisseur} placeholder="Nom du fournisseur" style={styles.input} />
+      <Text style={[styles.label, { color: isDarkMode ? "#f3e8d7" : "#444" }]}>Fournisseur</Text>
+      <TextInput 
+        value={fournisseur} 
+        onChangeText={setFournisseur} 
+        placeholder="Nom du fournisseur" 
+        style={[styles.input, { backgroundColor: isDarkMode ? "#1a2742" : "#f3f3f3", color: isDarkMode ? "#f3e8d7" : "#000" }]} 
+        placeholderTextColor={isDarkMode ? "#bfa98a" : "#888"}
+      />
         
-      <Text style={styles.label}>Montant</Text>
-      <TextInput  keyboardType="numeric" value={montant} onChangeText={setMontant} placeholder="0.00" style={styles.input}/>
+      <Text style={[styles.label, { color: isDarkMode ? "#f3e8d7" : "#444" }]}>Montant</Text>
+      <TextInput  
+        keyboardType="numeric" 
+        value={montant} 
+        onChangeText={setMontant} 
+        placeholder="0.00" 
+        style={[styles.input, { backgroundColor: isDarkMode ? "#1a2742" : "#f3f3f3", color: isDarkMode ? "#f3e8d7" : "#000" }]} 
+        placeholderTextColor={isDarkMode ? "#bfa98a" : "#888"}
+      />
        
-      <Text style={styles.label}>Numéro de facture</Text>
-      <TextInput value={facture} onChangeText={setFacture} placeholder="Ex: 123456789" style={styles.input} />
+      <Text style={[styles.label, { color: isDarkMode ? "#f3e8d7" : "#444" }]}>Numéro de facture</Text>
+      <TextInput 
+        value={facture} 
+        onChangeText={setFacture} 
+        placeholder="Ex: 123456789" 
+        style={[styles.input, { backgroundColor: isDarkMode ? "#1a2742" : "#f3f3f3", color: isDarkMode ? "#f3e8d7" : "#000" }]} 
+        placeholderTextColor={isDarkMode ? "#bfa98a" : "#888"}
+      />
          
       <TouchableOpacity
-        onPress={() => {
-          onConfirm({
-            type,
-            fournisseur,
-            montant,
-            facture,
-            date: new Date().toLocaleDateString(),
-          });
-        }}
-        style={[
-          styles.submit,
-          type === "Mobile" ? { backgroundColor: "#6b5a49" } :
-          type === "Internet" ? { backgroundColor: "#6b5a49" } :
-          { backgroundColor: "#6b5a49" }
-        ]}
+        onPress={() => onConfirm({ type, fournisseur, montant, facture, date: new Date().toLocaleDateString() })}
+        style={[styles.submit, { backgroundColor: "#6b5a49" }]}
       >
         <Text style={styles.submitText}>Confirmer le paiement</Text>
       </TouchableOpacity>
@@ -51,44 +58,74 @@ function PaymentForm({ type, onConfirm, onClose }) {
       <TouchableOpacity onPress={onClose} style={styles.cancelBtn}>
         <Text style={styles.cancelText}>Annuler</Text>
       </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 }
 
 // ---------- PAGE PRINCIPALE ----------
 export default function PaymentsScreen() {
-  const [activeForm, setActiveForm] = useState(null); // 'Mobile', 'Internet', 'Électricité', 'Eau'
+  const [activeForm, setActiveForm] = useState(null); 
   const [historique, setHistorique] = useState([]);
+  const { isDarkMode, toggleTheme } = useTheme();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const closeForm = () => setActiveForm(null);
+  const ajouterPaiement = (data) => { setHistorique(prev => [data, ...prev]); closeForm(); };
 
-  const ajouterPaiement = (data) => {
-    setHistorique(prev => [data, ...prev]);
-    closeForm();
-  };
-
-  return (
-    <View style={styles.container}>
-      <Header title="Paiements" />
-
+  const renderHeader = () => (
+    <View>
       {/* Grid boutons */}
       <View style={styles.grid}>
         {["Mobile", "Internet", "Électricité", "Eau"].map((type) => (
-          <TouchableOpacity key={type} style={styles.cardBtn} onPress={() => setActiveForm(type)}>
+          <TouchableOpacity 
+            key={type} 
+            style={[styles.cardBtn, { backgroundColor: isDarkMode ? "#1a2742" : "#fff" }]} 
+            onPress={() => setActiveForm(type)}
+          >
             <Text style={styles.cardIcon}>
               {type === "Mobile" ? "📱" :
                type === "Internet" ? "🌐" :
                type === "Électricité" ? "⚡" : "💧"}
             </Text>
-            <Text style={styles.cardLabel}>{type}</Text>
+            <Text style={[styles.cardLabel, { color: isDarkMode ? "#f3e8d7" : "#000" }]}>{type}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
+      {/* Historique titre */}
+      <Text style={[styles.historyTitle, { color: isDarkMode ? "#f3e8d7" : "#000", marginTop: 16 }]}>
+        Historique ({historique.length})
+      </Text>
+    </View>
+  );
+
+  return (
+    <View style={{ flex: 1, backgroundColor: isDarkMode ? "#141829" : "#f7f5f2" }}>
+      <Sidebar visible={sidebarOpen} onClose={() => setSidebarOpen(false)} isDarkMode={isDarkMode} />
+      <Header title="Paiements" isDarkMode={isDarkMode} onToggleTheme={toggleTheme} onMenuPress={() => setSidebarOpen(true)} />
+
+      <FlatList
+        data={historique}
+        keyExtractor={(_, idx) => String(idx)}
+        ListHeaderComponent={renderHeader}
+        renderItem={({ item }) => (
+          <View style={[styles.historyItem, { backgroundColor: isDarkMode ? "#1a2742" : "#fff" }]}>
+            <Text style={[styles.historyItemTitle, { color: isDarkMode ? "#f3e8d7" : "#000" }]}>
+              {item.type} — {item.fournisseur || "—"}
+            </Text>
+            <Text style={[styles.historyItemSubtitle, { color: isDarkMode ? "#bfa98a" : "#666" }]}>
+              {item.montant} € · {item.facture}
+            </Text>
+            <Text style={[styles.historyItemDate, { color: isDarkMode ? "#888" : "#999" }]}>{item.date}</Text>
+          </View>
+        )}
+        contentContainerStyle={{ padding: 16 }}
+      />
+
       {/* Modal form */}
       <Modal visible={!!activeForm} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
+        <View style={[styles.modalOverlay, { backgroundColor: "rgba(0,0,0,0.45)" }]}>
+          <View style={[styles.modalBox, { backgroundColor: isDarkMode ? "#1a2742" : "#fff" }]}>
             <TouchableOpacity onPress={closeForm} style={styles.modalClose}>
               <Text style={styles.modalCloseText}>X</Text>
             </TouchableOpacity>
@@ -97,69 +134,44 @@ export default function PaymentsScreen() {
                 type={activeForm} 
                 onConfirm={ajouterPaiement} 
                 onClose={closeForm} 
+                isDarkMode={isDarkMode}
               />
             )}
           </View>
         </View>
       </Modal>
 
-      {/* Historique */}
-      <View style={styles.history}>
-        <Text style={styles.historyTitle}>Historique ({historique.length})</Text>
-
-        <FlatList
-          data={historique}
-          keyExtractor={(_, idx) => String(idx)}
-          renderItem={({item}) => (
-            <View style={styles.historyItem}>
-              <Text style={styles.historyItemTitle}>
-                {item.type} — {item.fournisseur || "—"}
-              </Text>
-              <Text style={styles.historyItemSubtitle}>
-                {item.montant} € · {item.facture}
-              </Text>
-              <Text style={styles.historyItemDate}>{item.date}</Text>
-            </View>
-          )}
-        />
-      </View>
-
-      <FormPayments />
-      <MobileNav />
+      <MobileNav currentPage="payments" isDarkMode={isDarkMode} />
     </View>
   );
 }
 
 // ---------- STYLES ----------
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f7f5f2", padding: 16 },
-  pageTitle: { fontSize: 24, fontWeight: "700", color: "#6b5a49", marginBottom: 16 },
-
-  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 8, marginTop: 19,},
-  cardBtn: { width: "48%", backgroundColor: "#fff", borderRadius: 12, padding: 16, marginBottom: 8, alignItems: "center", shadowColor:"#000", shadowOpacity:0.06, elevation:2 },
+  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 8, marginTop: 19 },
+  cardBtn: { width: "48%", borderRadius: 12, padding: 16, marginBottom: 8, alignItems: "center", shadowColor:"#000", shadowOpacity:0.06, elevation:2 },
   cardIcon: { fontSize: 28, marginBottom: 8 },
   cardLabel: { fontWeight: "700" },
 
-  modalOverlay: { flex:1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "center", padding: 16 },
-  modalBox: { backgroundColor: "#fff", borderRadius: 12, padding: 16 },
+  modalOverlay: { flex:1, justifyContent: "center", padding: 16 },
+  modalBox: { borderRadius: 12, padding: 16 },
   modalClose: { alignSelf: "flex-end", marginBottom: 8 },
   modalCloseText: { color: "#ef4444", fontWeight: "700" },
 
   formHeader: { flexDirection: "row", gap: 8, marginBottom: 12 },
   formTitle: { fontWeight: "700", fontSize: 16 },
-  formSubtitle: { color: "#666", marginLeft: 8 },
+  formSubtitle: { marginLeft: 8 },
 
-  label: { marginBottom: 6, color: "#444" },
-  input: { backgroundColor: "#f3f3f3", padding: 12, borderRadius: 8, marginBottom: 8 },
+  label: { marginBottom: 6 },
+  input: { padding: 12, borderRadius: 8, marginBottom: 8 },
   submit: { marginTop: 8, padding: 12, borderRadius: 8, alignItems: "center" },
   submitText: { color: "#fff", fontWeight: "700" },
   cancelBtn: { marginTop: 8, alignItems: "center" },
   cancelText: { color: "#666" },
 
-  history: { marginTop: 16, flex: 1 },
   historyTitle: { fontWeight: "700", marginBottom: 8 },
-  historyItem: { padding: 12, backgroundColor: "#fff", borderRadius: 10, marginBottom: 8 },
+  historyItem: { padding: 12, borderRadius: 10, marginBottom: 8 },
   historyItemTitle: { fontWeight: "700" },
-  historyItemSubtitle: { color: "#666", marginTop: 4 },
-  historyItemDate: { color: "#999", marginTop: 6 },
+  historyItemSubtitle: { marginTop: 4 },
+  historyItemDate: { marginTop: 6 },
 });

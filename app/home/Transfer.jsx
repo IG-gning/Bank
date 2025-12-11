@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { View, Text , TextInput, TouchableOpacity,StyleSheet, } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import Header from "../components/Header";
 import MobileNav from "../components/MobileNav";
-
+import Sidebar from "../components/Sidebar"; // important
+import { useTheme } from "../context/ThemeContext";
 
 export default function Transfer() {
   const [activeTab, setActiveTab] = useState("interne");
+  const { isDarkMode, toggleTheme } = useTheme();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const internalFields = [
     { label: "Compte source", placeholder: "Compte Courant - 24 580,45 €" },
@@ -35,128 +38,139 @@ export default function Transfer() {
   ];
 
   return (
-    <ScrollView style={styles.container}>
-      <Header title="Transfert" />
+    <View style={{ flex: 1, backgroundColor: isDarkMode ? "#141829" : "#f1f5f9" }}>
+      {/* SIDEBAR */}
+      <Sidebar visible={sidebarOpen} onClose={() => setSidebarOpen(false)} isDarkMode={isDarkMode} />
 
       {/* HEADER */}
-      <View style={styles.header}>
-        <Text style={styles.subtitle}>
-          Envoyez de l'argent à vos proches ou payez vos factures
-        </Text>
-      </View>
+      <Header
+        title="Transfert"
+        isDarkMode={isDarkMode}
+        onToggleTheme={toggleTheme}
+        onMenuPress={() => setSidebarOpen(true)}
+      />
 
-      {/* MAIN WRAPPER */}
-      <View style={{ gap: 20 }}>
-
-        {/* FORMULAIRE */}
-        <View style={styles.formCard}>
-
-          {/* TABS */}
-          <View style={styles.tabsWrapper}>
-            {["interne", "externe"].map((tab) => (
-              <TouchableOpacity
-                key={tab}
-                onPress={() => setActiveTab(tab)}
-                style={[styles.tabButton, activeTab === tab && styles.activeTab]}
-              >
-                <Text style={styles.tabText}>
-                  {tab === "interne" ? "Transfert interne" : "Transfert externe"}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* FORMULAIRE DYNAMIQUE */}
-          <View>
-            <Text style={styles.formTitle}>
-              {activeTab === "interne" ? "Transfert entre vos comptes" : "Transfert externe"}
-            </Text>
-
-            <Text style={styles.formSubtitle}>
-              {activeTab === "interne"
-                ? "Sélectionnez les comptes"
-                : "Transférez vers un autre compte bancaire"}
-            </Text>
-
-            {(activeTab === "interne" ? internalFields : externalFields).map((field, index) => (
-              <View key={index} style={styles.field}>
-                <Text style={styles.label}>{field.label}</Text>
-                <TextInput style={styles.input} placeholder={field.placeholder} />
-              </View>
-            ))}
-
-            <TouchableOpacity style={styles.sendBtn}>
-              <Text style={styles.sendText}>Envoyer</Text>
-            </TouchableOpacity>
-          </View>
-
+      <ScrollView contentContainerStyle={{ padding: 20 }}>
+        <View style={styles.header}>
+          <Text style={[styles.subtitle, { color: isDarkMode ? "#f3e8d7" : "#555" }]}>
+            Envoyez de l'argent à vos proches ou payez vos factures
+          </Text>
         </View>
 
-        {/* SIDEBAR */}
+        {/* MAIN WRAPPER */}
         <View style={{ gap: 20 }}>
+          {/* FORMULAIRE */}
+          <View style={[styles.formCard, { backgroundColor: isDarkMode ? "#1a2742" : "white" }]}>
+            {/* TABS */}
+            <View style={[styles.tabsWrapper, { backgroundColor: "#e8dcc7" }]}>
+              {["interne", "externe"].map((tab) => (
+                <TouchableOpacity
+                  key={tab}
+                  onPress={() => setActiveTab(tab)}
+                  style={[styles.tabButton, activeTab === tab && styles.activeTab]}
+                >
+                  <Text style={styles.tabText}>
+                    {tab === "interne" ? "Transfert interne" : "Transfert externe"}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
-          {/* CONTACTS */}
-          <View style={styles.sidebarCard}>
-            <Text style={styles.sidebarTitle}>Contacts récents</Text>
+            {/* FORMULAIRE DYNAMIQUE */}
+            <View>
+              <Text style={[styles.formTitle, { color: isDarkMode ? "#f3e8d7" : "#000" }]}>
+                {activeTab === "interne" ? "Transfert entre vos comptes" : "Transfert externe"}
+              </Text>
 
-            {contacts.map((c, i) => (
-              <View key={i} style={styles.contactItem}>
-                <View style={[styles.contactIcon, { backgroundColor: c.bg }]}>
-                  <Text style={styles.contactEmoji}>{c.emoji}</Text>
+              <Text style={[styles.formSubtitle, { color: isDarkMode ? "#bfa98a" : "#888" }]}>
+                {activeTab === "interne"
+                  ? "Sélectionnez les comptes"
+                  : "Transférez vers un autre compte bancaire"}
+              </Text>
+
+              {(activeTab === "interne" ? internalFields : externalFields).map((field, index) => (
+                <View key={index} style={styles.field}>
+                  <Text style={[styles.label, { color: isDarkMode ? "#f3e8d7" : "#000" }]}>{field.label}</Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      { backgroundColor: isDarkMode ? "#24305e" : "#f7f4efff", color: isDarkMode ? "#fff" : "#000" },
+                    ]}
+                    placeholder={field.placeholder}
+                    placeholderTextColor={isDarkMode ? "#ccc" : "#888"}
+                  />
                 </View>
-                <Text>{c.name} - {c.email}</Text>
-              </View>
-            ))}
+              ))}
+
+              <TouchableOpacity style={styles.sendBtn}>
+                <Text style={styles.sendText}>Envoyer</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          {/* INFORMATIONS UTILES */}
-          <View style={styles.sidebarCard}>
-            <Text style={styles.sidebarTitle}>Informations utiles</Text>
+          {/* SIDEBAR CONTENT */}
+          <View style={{ gap: 20 }}>
+            {/* CONTACTS */}
+            <View style={[styles.sidebarCard, { backgroundColor: isDarkMode ? "#1a2742" : "white" }]}>
+              <Text style={[styles.sidebarTitle, { color: isDarkMode ? "#f3e8d7" : "#000" }]}>Contacts récents</Text>
 
-            {infos.map((info, i) => (
-              <View key={i} style={styles.infoItem}>
-                <View style={styles.infoBullet}></View>
-                <View>
-                  <Text style={styles.infoTitle}>{info.title}</Text>
-                  <Text style={styles.infoSub}>{info.sub}</Text>
+              {contacts.map((c, i) => (
+                <View key={i} style={styles.contactItem}>
+                  <View style={[styles.contactIcon, { backgroundColor: c.bg }]}>
+                    <Text style={styles.contactEmoji}>{c.emoji}</Text>
+                  </View>
+                  <Text style={{ color: isDarkMode ? "#f3e8d7" : "#000" }}>{c.name} - {c.email}</Text>
                 </View>
-              </View>
-            ))}
-          </View>
+              ))}
+            </View>
 
+            {/* INFORMATIONS UTILES */}
+            <View style={[styles.sidebarCard, { backgroundColor: isDarkMode ? "#1a2742" : "white" }]}>
+              <Text style={[styles.sidebarTitle, { color: isDarkMode ? "#f3e8d7" : "#000" }]}>Informations utiles</Text>
+
+              {infos.map((info, i) => (
+                <View key={i} style={styles.infoItem}>
+                  <View style={styles.infoBullet}></View>
+                  <View>
+                    <Text style={[styles.infoTitle, { color: isDarkMode ? "#f3e8d7" : "#000" }]}>{info.title}</Text>
+                    <Text style={[styles.infoSub, { color: isDarkMode ? "#bfa98a" : "#666" }]}>{info.sub}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
         </View>
-      </View>
+      </ScrollView>
 
-      <MobileNav />
-    </ScrollView>
+      {/* NAVIGATION MOBILE */}
+      <MobileNav currentPage="transfer" isDarkMode={isDarkMode} />
+    </View>
   );
 }
 
 /* ==================== STYLES ==================== */
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f1f5f9", padding: 20 },
   header: { marginBottom: 30, alignItems: "center" },
-  title: { fontSize: 28, fontWeight: "bold" },
-  subtitle: { fontSize: 16, color: "#555", marginTop: 4 },
-  formCard: { backgroundColor: "white", padding: 20, borderRadius: 16, shadowColor: "#aaa", shadowOpacity: 0.2, shadowRadius: 6 },
-  tabsWrapper: { flexDirection: "row", backgroundColor: "#e8dcc7", borderRadius: 12, padding: 4, marginBottom: 20 },
-  tabButton: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: 10, backgroundColor: "#e8dcc7" },
+  subtitle: { fontSize: 16, marginTop: 4 },
+  formCard: { padding: 20, borderRadius: 16, shadowColor: "#aaa", shadowOpacity: 0.2, shadowRadius: 6 },
+  tabsWrapper: { flexDirection: "row", borderRadius: 12, padding: 4, marginBottom: 20 },
+  tabButton: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: 10 },
   activeTab: { backgroundColor: "#fff" },
-  tabText: { fontWeight: "600"},
+  tabText: { fontWeight: "600" },
   formTitle: { fontSize: 20, fontWeight: "700", marginBottom: 4 },
-  formSubtitle: { fontSize: 12, color: "#888", marginBottom: 20 },
+  formSubtitle: { fontSize: 12, marginBottom: 20 },
   field: { marginBottom: 15 },
   label: { fontWeight: "600", marginBottom: 6 },
-  input: { backgroundColor: "#f7f4efff", padding: 12, borderRadius: 10, borderWidth: 1, borderColor: "#ccc" },
+  input: { padding: 12, borderRadius: 10, borderWidth: 1, borderColor: "#ccc" },
   sendBtn: { marginTop: 10, backgroundColor: "#e8dcc7", padding: 12, borderRadius: 10, alignItems: "center" },
-  sendText: {  color:"black", fontSize: 16, fontWeight: "600" },
-  sidebarCard: { backgroundColor: "white", padding: 16,  borderRadius: 14, shadowColor: "#aaa", shadowOpacity: 0.2, shadowRadius: 6 },
+  sendText: { color: "black", fontSize: 16, fontWeight: "600" },
+  sidebarCard: { padding: 16, borderRadius: 14, shadowColor: "#aaa", shadowOpacity: 0.2, shadowRadius: 6 },
   sidebarTitle: { fontSize: 18, fontWeight: "700", marginBottom: 10 },
   contactItem: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
   contactIcon: { width: 36, height: 36, borderRadius: 50, alignItems: "center", justifyContent: "center" },
   contactEmoji: { fontSize: 18 },
   infoItem: { flexDirection: "row", gap: 12, marginBottom: 12 },
-  infoBullet: { width: 10, height: 10, backgroundColor: "#6b5a49", borderRadius: 10, marginTop: 6},
+  infoBullet: { width: 10, height: 10, backgroundColor: "#6b5a49", borderRadius: 10, marginTop: 6 },
   infoTitle: { fontSize: 14, fontWeight: "600" },
-  infoSub: { fontSize: 12, color: "#666" },
+  infoSub: { fontSize: 12 },
 });
