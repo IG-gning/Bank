@@ -18,19 +18,7 @@ import Sidebar from "../components/Sidebar";
 import { useTheme } from "../context/ThemeContext";
 
 export default function ProfilePage({ onNavigate, currentPage }) {
-  const { theme, toggleTheme } = useTheme();
-
-  const isDarkMode = theme === "dark";
-
-  const colors = {
-    bg: isDarkMode ? "#0b0b0d" : "#f9f6ef",
-    card: isDarkMode ? "#151518" : "#ffffff",
-    text: isDarkMode ? "#ffffff" : "#1a1a1a",
-    soft: isDarkMode ? "#b8b8b8" : "#6f6f6f",
-    border: isDarkMode ? "#2b2b30" : "#eae4db",
-    primary: "#d3b28c",
-  };
-
+  const { isDarkMode, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [user, setUser] = useState({
@@ -44,13 +32,22 @@ export default function ProfilePage({ onNavigate, currentPage }) {
   const [twoFA, setTwoFA] = useState(false);
   const [emailNotif, setEmailNotif] = useState(true);
 
+  // Définir les couleurs en fonction du mode
+  const colors = {
+    bg: isDarkMode ? "#141829" : "#f7f5f2",
+    card: isDarkMode ? "#1a2742" : "#fff",
+    text: isDarkMode ? "#f3e8d7" : "#000",
+    soft: isDarkMode ? "#bfa98a" : "#666",
+    border: isDarkMode ? "#2c3a5a" : "#ddd",
+    primary: "#6b5a49",
+  };
+
   const handleChange = (key, value) => {
     setUser({ ...user, [key]: value });
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-
       {/* SIDEBAR */}
       <Sidebar
         visible={sidebarOpen}
@@ -204,11 +201,7 @@ export default function ProfilePage({ onNavigate, currentPage }) {
         </View>
 
         {/* ----------- SECTION PARAMÈTRES ----------- */}
-        <SettingsGroup
-          title="Sécurité"
-          desc="Sécurisez votre compte"
-          colors={colors}
-        >
+        <SettingsGroup title="Sécurité" desc="Sécurisez votre compte" colors={colors}>
           <SettingSwitch
             icon="shield"
             label="Authentification à deux facteurs"
@@ -227,11 +220,7 @@ export default function ProfilePage({ onNavigate, currentPage }) {
           />
         </SettingsGroup>
 
-        <SettingsGroup
-          title="Notifications"
-          desc="Gérez vos alertes"
-          colors={colors}
-        >
+        <SettingsGroup title="Notifications" desc="Gérez vos alertes" colors={colors}>
           <SettingSwitch
             icon="envelope"
             label="Notifications email"
@@ -242,12 +231,7 @@ export default function ProfilePage({ onNavigate, currentPage }) {
           />
         </SettingsGroup>
 
-        <SettingsGroup
-          title="Apparence"
-          desc="Mode clair ou sombre"
-          colors={colors}
-        >
-          {/* Switch connecté au contexte global */}
+        <SettingsGroup title="Apparence" desc="Mode clair ou sombre" colors={colors}>
           <SettingSwitch
             icon="moon-o"
             label={isDarkMode ? "Mode sombre" : "Mode clair"}
@@ -260,11 +244,7 @@ export default function ProfilePage({ onNavigate, currentPage }) {
       </ScrollView>
 
       {/* NAVIGATION EN BAS */}
-      <MobileNav
-        currentPage={currentPage}
-        onNavigate={onNavigate}
-        isDarkMode={isDarkMode}
-      />
+      <MobileNav currentPage={currentPage} onNavigate={onNavigate} isDarkMode={isDarkMode} />
     </View>
   );
 }
@@ -274,17 +254,9 @@ export default function ProfilePage({ onNavigate, currentPage }) {
 -------------------------------------------- */
 
 const InfoLine = ({ label, value, colors }) => (
-  <View
-    style={{
-      paddingVertical: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    }}
-  >
+  <View style={{ paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border }}>
     <Text style={{ color: colors.soft, fontSize: 13 }}>{label}</Text>
-    <Text style={{ color: colors.text, fontSize: 16, fontWeight: "500" }}>
-      {value}
-    </Text>
+    <Text style={{ color: colors.text, fontSize: 16, fontWeight: "500" }}>{value}</Text>
   </View>
 );
 
@@ -315,56 +287,32 @@ const SettingsGroup = ({ title, desc, colors, children }) => (
       borderColor: colors.border,
     }}
   >
-    <Text style={{ fontSize: 18, fontWeight: "700", color: colors.text }}>
-      {title}
-    </Text>
+    <Text style={{ fontSize: 18, fontWeight: "700", color: colors.text }}>{title}</Text>
     <Text style={{ color: colors.soft, marginBottom: 15 }}>{desc}</Text>
     {children}
   </View>
 );
 
 const SettingSwitch = ({ icon, label, sub, value, onChange, colors }) => (
-  <View
-    style={{
-      flexDirection: "row",
-      alignItems: "center",
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-      paddingVertical: 12,
-    }}
-  >
+  <View style={{ flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 12 }}>
     <FontAwesome name={icon} size={22} color={colors.text} />
-
     <View style={{ marginLeft: 12, flex: 1 }}>
       <Text style={{ color: colors.text, fontSize: 16 }}>{label}</Text>
       <Text style={{ color: colors.soft, fontSize: 12 }}>{sub}</Text>
     </View>
-
     <Switch value={value} onValueChange={onChange} />
   </View>
 );
 
 const SettingLink = ({ icon, label, sub, linkText, colors }) => (
-  <View
-    style={{
-      flexDirection: "row",
-      alignItems: "center",
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-      paddingVertical: 12,
-    }}
-  >
+  <View style={{ flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 12 }}>
     <FontAwesome name={icon} size={22} color={colors.text} />
-
     <View style={{ marginLeft: 12, flex: 1 }}>
       <Text style={{ color: colors.text, fontSize: 16 }}>{label}</Text>
       <Text style={{ color: colors.soft, fontSize: 12 }}>{sub}</Text>
     </View>
-
     <TouchableOpacity>
-      <Text style={{ color: colors.primary, fontWeight: "600" }}>
-        {linkText}
-      </Text>
+      <Text style={{ color: colors.primary, fontWeight: "600" }}>{linkText}</Text>
     </TouchableOpacity>
   </View>
 );
