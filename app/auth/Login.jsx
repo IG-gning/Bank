@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import React, { useContext, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   Alert,
   Dimensions,
@@ -48,8 +49,10 @@ export default function Login() {
           email,
           password,
         });
+        await AsyncStorage.setItem("token", res.data.token);
         Alert.alert("Succès", res.data.message);
         router.push("/home");
+        
       }
     } catch (err) {
       console.error(err);
