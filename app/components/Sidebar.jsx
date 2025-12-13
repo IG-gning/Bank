@@ -22,25 +22,45 @@ export default function Sidebar({ visible, onClose, isDarkMode }) {
   if (!show) return null;
 
   const COLORS = {
-    bg: isDarkMode ? "#141829" : "#eadfcf",
+    bg: isDarkMode ? "#010517ff" : "#eadfcf",
     text: isDarkMode ? "#f3e8d7" : "#3b322a",
     accent: isDarkMode ? "#bfa98a" : "#5b4636",
     divider: isDarkMode ? "#ffffff20" : "#00000015",
   };
 
-  // Menu mis à jour (wallet supprimé, profil-simple ajouté)
   const menu = [
-    { label: "Mon Profil", icon: User, page: "profile-simple" },
-    { label: "Transactions", icon: Receipt, page: "transactions" },
-    { label: "Mes Cartes", icon: CreditCard, page: "cards" },
-    { label: "Paramètres", icon: Settings, page: "settings" },
+    { label: "Mon Profil", icon: User, page: "/profile-simple" },
+    { label: "Transactions", icon: Receipt, page: "/home/Transactions" },
+    { label: "Mes Cartes", icon: CreditCard, page: "/Accounts" },
+    { label: "Paramètres", icon: Settings, page: "/settings" },
+    { label: "Support & Aide", icon: HelpCircle, page: "/support" },
+    { label: "Se déconnecter", icon: LogOut, page: "/auth/Login", logout: true },
   ];
+
+const handlePress = (item) => {
+
+  if (item.logout) {
+    onClose?.();
+    router.replace(item.page);
+    return;
+  }
+
+  router.push(item.page);
+  onClose?.();
+
+  console.log("Navigate to:", item.page);
+};
+
+
+
+
 
   return (
     <View style={styles.overlay}>
       <TouchableOpacity style={styles.background} onPress={onClose} activeOpacity={1} />
 
       <Animated.View style={[styles.sidebar, { backgroundColor: COLORS.bg, left: slideAnim }]}>
+        {/* Profil */}
         <View style={styles.profileSection}>
           <Image source={{ uri: "https://i.pravatar.cc/300" }} style={styles.avatar} />
           <View>
@@ -51,31 +71,17 @@ export default function Sidebar({ visible, onClose, isDarkMode }) {
 
         <View style={[styles.divider, { backgroundColor: COLORS.divider }]} />
 
+        {/* Menu */}
         {menu.map((item, i) => (
           <TouchableOpacity
             key={i}
-            style={styles.menuItem}
-            onPress={() => {
-              router.push(item.page); // <-- utilise la navigation expo-router
-              onClose(); // ferme le sidebar
-            }}
+            style={[styles.menuItem, item.logout && { marginTop: 30 }]}
+            onPress={() => handlePress(item)}
           >
-            <item.icon color={COLORS.accent} size={20} />
-            <Text style={[styles.menuText, { color: COLORS.text }]}>{item.label}</Text>
+            <item.icon color={item.logout ? "#d9534f" : COLORS.accent} size={item.logout ? 22 : 20} />
+            <Text style={[styles.menuText, { color: item.logout ? "#d9534f" : COLORS.text }]}>{item.label}</Text>
           </TouchableOpacity>
         ))}
-
-        <View style={[styles.divider, { backgroundColor: COLORS.divider }]} />
-
-        <TouchableOpacity style={styles.menuItem}>
-          <HelpCircle color={COLORS.accent} size={20} />
-          <Text style={[styles.menuText, { color: COLORS.text }]}>Support & Aide</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={[styles.menuItem, { marginTop: 30 }]}>
-          <LogOut color={"#d9534f"} size={22} />
-          <Text style={[styles.menuText, { color: "#d9534f" }]}>Se déconnecter</Text>
-        </TouchableOpacity>
       </Animated.View>
     </View>
   );
@@ -84,7 +90,7 @@ export default function Sidebar({ visible, onClose, isDarkMode }) {
 const styles = StyleSheet.create({
   overlay: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 999, flexDirection: "row" },
   background: { position: "absolute", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "#00000050" },
-  sidebar: { width: width * 0.7, height: "100%", paddingVertical: 40, paddingHorizontal: 20, paddingTop: 40, position: "absolute", zIndex: 1000 },
+  sidebar: { width: width * 0.7, height: "100%", paddingVertical: 40, paddingHorizontal: 20, position: "absolute", zIndex: 1000 },
   profileSection: { flexDirection: "row", alignItems: "center", marginBottom: 2, paddingTop: 70 },
   avatar: { width: 55, height: 55, borderRadius: 100, marginRight: 12 },
   profileName: { fontSize: 18, fontWeight: "700" },

@@ -11,19 +11,19 @@ export default function Header({ isDarkMode, onToggleTheme, onMenuPress, user })
   const handlePressOut = (anim) => Animated.spring(anim, { toValue: 1, useNativeDriver: true }).start();
 
   return (
-    <View style={[styles.header, { backgroundColor: isDarkMode ? "#141829" : "#eadfcf" }]}>
+    <View style={[styles.header, { backgroundColor: isDarkMode ? "#010517ff" : "#e8dcc7" }]}>
       <TouchableOpacity onPress={onMenuPress}>
-        <MaterialCommunityIcons name="menu" size={28} color={isDarkMode ? "#f3e8d7" : "#3b322a"} />
+        <MaterialCommunityIcons name="menu" size={28} color={isDarkMode ? "#f3e8d7" : "#5b4636"} />
       </TouchableOpacity>
 
       <View style={styles.searchWrapper}>
-        <Ionicons name="search-outline" size={20} color={isDarkMode ? "#bfa98a" : "#3b322a80"} />
+        <Ionicons name="search-outline" size={20} color={isDarkMode ? "#bfa98a" : "#5b4636"} style={styles.iconSearch}/>
         <TextInput
           placeholder="Rechercher..."
-          placeholderTextColor={isDarkMode ? "#bfa98a" : "#3b322a80"}
+          placeholderTextColor={isDarkMode ? "#bfa98a" : "#5b4636"}
           value={search}
           onChangeText={setSearch}
-          style={[styles.searchInput, { backgroundColor: isDarkMode ? "#1a1512" : "#f3e8d7" }]}
+          style={[styles.searchInput, { backgroundColor: isDarkMode ? "#1a1512" : "white" }]}
         />
       </View>
 
@@ -75,12 +75,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 14,
   },
+  iconSearch: {
+    position:"absolute",
+    left: 190
+  },
   searchInput: {
     flex: 1,
     height: 36,
     borderRadius: 10,
     paddingHorizontal: 8,
-    color: "#ffffffff",
+    color: "#5b4636",
     marginLeft: 6,
   },
   rightButtons: {
