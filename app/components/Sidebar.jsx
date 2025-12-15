@@ -48,7 +48,7 @@ const handlePress = (item) => {
   router.push(item.page);
   onClose?.();
 
-  console.log("Navigate to:", item.page);
+  
 };
 
 
