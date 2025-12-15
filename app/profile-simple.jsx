@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
 
 // Components
@@ -6,54 +6,115 @@ import Header from "./components/Header";
 import MobileNav from "./components/MobileNav";
 import Sidebar from "./components/Sidebar";
 
-// Theme Context
+// Theme
 import { useTheme } from "./context/ThemeContext";
+
+// Backend
+import { BackendContext } from "./context";
 
 export default function ProfilePage({ onNavigate, currentPage }) {
   const { colors, isDarkMode, toggleTheme } = useTheme();
+  const api = useContext(BackendContext);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const [user, setUser] = useState({
-    prenom: "Mouhamed",
-    nom: "Ndiaye",
-    email: "mouhamed22@gmail.com",
-    numero: "+221 78 182 52 22",
-  });
-
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const [user, setUser] = useState(null);
+
+  /* =============================
+     FETCH PROFILE
+  ============================== */
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await api.get("/api/settings/me");
+
+        setUser({
+          prenom: res.data.prenom,
+          nom: res.data.name,
+          email: res.data.email,
+          numero: res.data.telephone || "",
+        });
+      } catch (err) {
+        console.log("Erreur profil :", err.response?.data || err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  /* =============================
+     UPDATE PROFILE
+  ============================== */
+  const handleSave = async () => {
+    try {
+      await api.put("/api/settings/update-profile", {
+        prenom: user.prenom,
+        name: user.nom,
+        email: user.email,
+        telephone: user.numero,
+      });
+
+      setIsEditing(false);
+    } catch (err) {
+      console.log("Erreur update :", err.response?.data || err.message);
+    }
+  };
 
   const handleChange = (key, value) => {
     setUser({ ...user, [key]: value });
   };
 
+  /* =============================
+     SAFE RENDER
+  ============================== */
+  if (loading) return <View />;
+  if (!user) return <Text>Impossible de charger le profil</Text>;
+
   return (
-    <View style={{ flex: 1, backgroundColor: isDarkMode ? "#010517ff" : "#fff"}}>
+    <View style={{ flex: 1, backgroundColor: isDarkMode ? "#010517ff" : "#fff" }}>
       {/* SIDEBAR */}
-      <Sidebar visible={sidebarOpen} 
-              onClose={() => setSidebarOpen(false)}
-              isDarkMode={isDarkMode}
-              onNavigate={onNavigate}
+      <Sidebar
+        visible={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        isDarkMode={isDarkMode}
+        onNavigate={onNavigate}
       />
 
-      {/* HEADER */} 
-      <Header title="Mon Profil"
-              isDarkMode={isDarkMode}
-              onToggleTheme={toggleTheme}
-              onMenuPress={() => setSidebarOpen(true)}
+      {/* HEADER */}
+      <Header
+        title="Mon Profil"
+        isDarkMode={isDarkMode}
+        onToggleTheme={toggleTheme}
+        onMenuPress={() => setSidebarOpen(true)}
       />
 
       <ScrollView contentContainerStyle={{ paddingBottom: 140 }}>
-        {/* ----------- CARD PHOTO + INFO ----------- */}
-        <View style={{backgroundColor: colors.card, padding: 20, margin: 15, borderRadius: 18, borderWidth: 1, borderColor: colors.border,     
-              ...(!isDarkMode 
-               ? {shadowColor: "#a8a8a8ff", shadowOffset: { width: 10, height: 10 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 10, borderLeft:"4px solid #5b4636"}
-               : {backgroundColor:"#030e25ff", shadowColor: "transparent", shadowOpacity: 0, elevation: 0, borderLeft:"4px solid #e8dcc7"}), 
-           }}>
-
+        {/* PHOTO + NOM */}
+        <View
+          style={{
+            backgroundColor: colors.card,
+            padding: 20,
+            margin: 15,
+            borderRadius: 18,
+            borderWidth: 1,
+            borderColor: colors.border,
+          }}
+        >
           <View style={{ alignItems: "center" }}>
-            <View  style={{width: 90, height: 90, borderRadius: 50, backgroundColor: colors.primary || "#6b5a49", 
-                           justifyContent: "center", alignItems: "center"}}>
-             
+            <View
+              style={{
+                width: 90,
+                height: 90,
+                borderRadius: 50,
+                backgroundColor: colors.primary,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
               <Text style={{ fontSize: 30, color: "#fff", fontWeight: "bold" }}>
                 {user.prenom[0]}
                 {user.nom[0]}
@@ -64,33 +125,37 @@ export default function ProfilePage({ onNavigate, currentPage }) {
               {user.prenom} {user.nom}
             </Text>
 
-            <Text style={{ color: colors.soft, marginBottom: 10 }}>Client Premium</Text>
-
             {!isEditing && (
               <TouchableOpacity
                 onPress={() => setIsEditing(true)}
                 style={{
-                  backgroundColor: colors.primary || "#6b5a49",
+                  backgroundColor: colors.primary,
                   paddingVertical: 10,
                   paddingHorizontal: 25,
                   borderRadius: 12,
                   marginTop: 10,
                 }}
               >
-                <Text style={{ color: "#fff", fontWeight: "600" }}>Modifier Profil</Text>
+                <Text style={{ color: "#fff", fontWeight: "600" }}>
+                  Modifier Profil
+                </Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
 
-        {/* ----------- CARD INFORMATIONS ----------- */}
-        <View style={{ backgroundColor: colors.card, padding: 20, marginHorizontal: 15, borderRadius: 18, borderWidth: 1, borderColor: colors.border,
-              ...(!isDarkMode 
-               ? {shadowColor: "#a8a8a8ff", shadowOffset: { width: 10, height: 10 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 10, borderLeft:"4px solid #5b4636"}
-               : {backgroundColor:"#030e25ff", shadowColor: "transparent", shadowOpacity: 0, elevation: 0, borderLeft:"4px solid #e8dcc7"}), 
-            }}>
-
-          <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 10, color: colors.text,}}>
+        {/* INFOS */}
+        <View
+          style={{
+            backgroundColor: colors.card,
+            padding: 20,
+            marginHorizontal: 15,
+            borderRadius: 18,
+            borderWidth: 1,
+            borderColor: colors.border,
+          }}
+        >
+          <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 10, color: colors.text }}>
             Informations personnelles
           </Text>
 
@@ -103,27 +168,21 @@ export default function ProfilePage({ onNavigate, currentPage }) {
             </>
           ) : (
             <>
-              <EditInput value={user.prenom}
-                         colors={colors}
-                         onChange={(v) => handleChange("prenom", v)}
-              />
-              <EditInput value={user.nom}
-                         colors={colors}
-                         onChange={(v) => handleChange("nom", v)}
-              />
-              <EditInput value={user.email}               
-                         colors={colors}
-                         onChange={(v) => handleChange("email", v)}
-              />
-              <EditInput value={user.numero}             
-                         colors={colors}
-                         onChange={(v) => handleChange("numero", v)}
-              />
+              <EditInput value={user.prenom} onChange={(v) => handleChange("prenom", v)} colors={colors} />
+              <EditInput value={user.nom} onChange={(v) => handleChange("nom", v)} colors={colors} />
+              <EditInput value={user.email} onChange={(v) => handleChange("email", v)} colors={colors} />
+              <EditInput value={user.numero} onChange={(v) => handleChange("numero", v)} colors={colors} />
 
-              <TouchableOpacity onPress={() => setIsEditing(false)}               
-                style={{backgroundColor: colors.primary || "#6b5a49", padding: 12, borderRadius: 12, marginTop: 10, }}>
-
-                <Text style={{ textAlign: "center", color: "#fff", fontWeight: "600", }}>
+              <TouchableOpacity
+                onPress={handleSave}
+                style={{
+                  backgroundColor: colors.primary,
+                  padding: 12,
+                  borderRadius: 12,
+                  marginTop: 10,
+                }}
+              >
+                <Text style={{ textAlign: "center", color: "#fff", fontWeight: "600" }}>
                   Sauvegarder
                 </Text>
               </TouchableOpacity>
@@ -132,16 +191,12 @@ export default function ProfilePage({ onNavigate, currentPage }) {
         </View>
       </ScrollView>
 
-      {/* NAVIGATION EN BAS */}
       <MobileNav currentPage={currentPage} onNavigate={onNavigate} isDarkMode={isDarkMode} />
     </View>
   );
 }
 
-/* -------------------------------------------
-   UI COMPONENTS
--------------------------------------------- */
-
+/* UI */
 const InfoLine = ({ label, value, colors }) => (
   <View style={{ paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border }}>
     <Text style={{ color: colors.soft, fontSize: 13 }}>{label}</Text>
@@ -153,13 +208,14 @@ const EditInput = ({ value, onChange, colors }) => (
   <TextInput
     value={value}
     onChangeText={onChange}
-    style={{ backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border, padding: 12,
-             borderRadius: 10, marginTop: 10, color: colors.text,}}
-        
-   />   
-
-      
-      
-    
-  
+    style={{
+      backgroundColor: colors.bg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: 12,
+      borderRadius: 10,
+      marginTop: 10,
+      color: colors.text,
+    }}
+  />
 );
