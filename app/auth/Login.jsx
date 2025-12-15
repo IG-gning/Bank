@@ -1,13 +1,16 @@
-import React, { useState } from "react";
+import { useRouter } from "expo-router";
+import React, { useContext, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-  View,
+  Alert,
+  Dimensions,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Dimensions,
+  View,
 } from "react-native";
-import { useRouter } from "expo-router"; // <-- Ajouté ici
+import { BackendContext } from "../context"; // <-- BackendContext pour axios
 
 const { width, height } = Dimensions.get("window");
 
@@ -15,23 +18,57 @@ export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const router = useRouter(); // <-- Initialisation ici
+  // Champs
+  const [prenom, setPrenom] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [telephone, setTelephone] = useState("");
+  const [dateDeNaissance, setDateDeNaissance] = useState("");
 
-  const handleSubmit = () => {
-    console.log(isSignUp ? "Sign Up" : "Login");
-    router.push("/home"); // <-- Redirection vers dashboard
+  const router = useRouter();
+  const api = useContext(BackendContext); // <-- axios instance
+  
+  const handleSubmit = async () => {
+    try {
+      if (isSignUp) {
+        // Signup
+        const res = await api.post("/api/auth/register", { // <-- corrigé ici
+          name,
+          prenom,
+          email,
+          password,
+          telephone,
+          dateDeNaissance,
+        });
+        Alert.alert("Succès", res.data.message);
+        router.push("/home");
+      } else {
+        // Login
+        const res = await api.post("/api/auth/login", { // <-- corrigé ici
+          email,
+          password,
+        });
+        await AsyncStorage.setItem("token", res.data.token);
+        Alert.alert("Succès", res.data.message);
+        router.push("/home");
+        
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert(
+        "Erreur",
+        err.response?.data?.message || "Impossible de se connecter"
+      );
+    }
   };
 
   return (
     <View style={styles.container}>
-      {/* Background bubbles */}
       <View style={styles.bubbleTop} />
       <View style={styles.bubbleBottom} />
-
-      {/* Header space */}
       <View style={styles.headerSpace} />
 
-      {/* Form Card */}
       <View style={styles.formCard}>
         {!isSignUp && (
           <>
@@ -43,31 +80,40 @@ export default function Login() {
         )}
         {isSignUp && <Text style={styles.formTitle}>Créer un compte</Text>}
 
-        {/* SignUp Fields */}
         {isSignUp && (
           <View style={styles.row}>
             <View style={[styles.field, { flex: 1, marginRight: 10 }]}>
               <Text style={styles.label}>Prénom</Text>
-              <TextInput style={styles.input} placeholder="Prénom" />
+              <TextInput
+                style={styles.input}
+                placeholder="Jean"
+                value={prenom}
+                onChangeText={setPrenom}
+              />
             </View>
             <View style={[styles.field, { flex: 1 }]}>
               <Text style={styles.label}>Nom</Text>
-              <TextInput style={styles.input} placeholder="Nom" />
+              <TextInput
+                style={styles.input}
+                placeholder="Dupont"
+                value={name}
+                onChangeText={setName}
+              />
             </View>
           </View>
         )}
 
-        {/* Email Field */}
         <View style={styles.field}>
           <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
             placeholder="Email@exemple.fr"
             keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
           />
         </View>
 
-        {/* Password Field */}
         <View style={styles.field}>
           <Text style={styles.label}>Mot de passe</Text>
           <View style={styles.passwordWrapper}>
@@ -75,6 +121,8 @@ export default function Login() {
               style={styles.inputPassword}
               placeholder="••••••••"
               secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
               <Text style={styles.showPass}>{showPassword ? "*" : "o"}</Text>
@@ -82,14 +130,35 @@ export default function Login() {
           </View>
         </View>
 
-        {/* Submit Button */}
+        {isSignUp && (
+          <>
+            <View style={styles.field}>
+              <Text style={styles.label}>Téléphone</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="77xxxxxxx"
+                value={telephone}
+                onChangeText={setTelephone}
+              />
+            </View>
+            <View style={styles.field}>
+              <Text style={styles.label}>Date de naissance</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="JJ/MM/AAAA"
+                value={dateDeNaissance}
+                onChangeText={setDateDeNaissance}
+              />
+            </View>
+          </>
+        )}
+
         <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
           <Text style={styles.submitText}>
             {isSignUp ? "Créer mon compte" : "Se connecter"}
           </Text>
         </TouchableOpacity>
 
-        {/* Toggle Login / SignUp */}
         <View style={styles.toggleContainer}>
           <Text style={styles.toggleText}>
             {isSignUp
@@ -107,7 +176,7 @@ export default function Login() {
   );
 }
 
-// ...styles restent identiques
+// Styles identiques à ton code existant
 
 
 const styles = StyleSheet.create({

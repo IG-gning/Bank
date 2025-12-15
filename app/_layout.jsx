@@ -1,14 +1,14 @@
-import { Stack } from "expo-router";
-import { ThemeProvider } from "./context/ThemeContext";
+import { Slot } from "expo-router";
+import { BackendContext, api } from "./context";
+import ThemeProvider from "./context/ThemeContext";
+
 
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-        }}
-      />
+      <BackendContext.Provider value={api}>
+        <Slot />
+      </BackendContext.Provider>
     </ThemeProvider>
   );
 }
