@@ -38,7 +38,7 @@ export default function Transfer() {
   ];
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDarkMode ? "#141829" : "#f1f5f9" }}>
+    <View style={{ flex: 1, backgroundColor: isDarkMode ? "#010517ff" : "#f1f5f9" }}>
       {/* SIDEBAR */}
       <Sidebar visible={sidebarOpen} onClose={() => setSidebarOpen(false)} isDarkMode={isDarkMode} />
 
@@ -60,7 +60,7 @@ export default function Transfer() {
         {/* MAIN WRAPPER */}
         <View style={{ gap: 20 }}>
           {/* FORMULAIRE */}
-          <View style={[styles.formCard, { backgroundColor: isDarkMode ? "#1a2742" : "white" }]}>
+          <View style={[styles.formCard, { backgroundColor: isDarkMode ? "#030e25ff" : "white" }]}>
             {/* TABS */}
             <View style={[styles.tabsWrapper, { backgroundColor: "#e8dcc7" }]}>
               {["interne", "externe"].map((tab) => (
@@ -94,7 +94,7 @@ export default function Transfer() {
                   <TextInput
                     style={[
                       styles.input,
-                      { backgroundColor: isDarkMode ? "#24305e" : "#f7f4efff", color: isDarkMode ? "#fff" : "#000" },
+                      { backgroundColor: isDarkMode ? "#030e25ff" : "#f7f4efff", color: isDarkMode ? "#fff" : "#000" },
                     ]}
                     placeholder={field.placeholder}
                     placeholderTextColor={isDarkMode ? "#ccc" : "#888"}
@@ -111,7 +111,7 @@ export default function Transfer() {
           {/* SIDEBAR CONTENT */}
           <View style={{ gap: 20 }}>
             {/* CONTACTS */}
-            <View style={[styles.sidebarCard, { backgroundColor: isDarkMode ? "#1a2742" : "white" }]}>
+            <View style={[styles.sidebarCard, { backgroundColor: isDarkMode ? "#030e25ff" : "white" }]}>
               <Text style={[styles.sidebarTitle, { color: isDarkMode ? "#f3e8d7" : "#000" }]}>Contacts récents</Text>
 
               {contacts.map((c, i) => (
@@ -125,7 +125,7 @@ export default function Transfer() {
             </View>
 
             {/* INFORMATIONS UTILES */}
-            <View style={[styles.sidebarCard, { backgroundColor: isDarkMode ? "#1a2742" : "white" }]}>
+            <View style={[styles.sidebarCard, { backgroundColor: isDarkMode ? "#030e25ff" : "white", }]}>
               <Text style={[styles.sidebarTitle, { color: isDarkMode ? "#f3e8d7" : "#000" }]}>Informations utiles</Text>
 
               {infos.map((info, i) => (
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   input: { padding: 12, borderRadius: 10, borderWidth: 1, borderColor: "#ccc" },
   sendBtn: { marginTop: 10, backgroundColor: "#e8dcc7", padding: 12, borderRadius: 10, alignItems: "center" },
   sendText: { color: "black", fontSize: 16, fontWeight: "600" },
-  sidebarCard: { padding: 16, borderRadius: 14, shadowColor: "#aaa", shadowOpacity: 0.2, shadowRadius: 6 },
+  sidebarCard: { padding: 16, borderRadius: 14, shadowColor: "#aaa", shadowOpacity: 0.2, shadowRadius: 6, },
   sidebarTitle: { fontSize: 18, fontWeight: "700", marginBottom: 10 },
   contactItem: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
   contactIcon: { width: 36, height: 36, borderRadius: 50, alignItems: "center", justifyContent: "center" },

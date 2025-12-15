@@ -5,11 +5,11 @@ import { LineChart, BarChart } from "react-native-chart-kit";
 import Header from "../components/Header";
 import MobileNav from "../components/MobileNav";
 import Sidebar from "../components/Sidebar";
-import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../context/ThemeContext";
-import { BackendContext, api } from "../context";
+import { BackendContext } from "../context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const screenWidth = Dimensions.get("window").width - 32; // padding 16
+const screenWidth = Dimensions.get("window").width - 32;
 
 export default function Home() {
   const { isDarkMode, toggleTheme } = useTheme();
@@ -17,28 +17,44 @@ export default function Home() {
   const [showTotal, setShowTotal] = useState(true);
   const [dashboard, setDashboard] = useState(null);
   const router = useRouter();
+  const api = useContext(BackendContext);
 
-  // Navigation
-  const onNavigate = (page) => {
-    router.push(`/home/${page}`);
-  };
+  // Vérifier token au montage
+  useEffect(() => {
+    const checkToken = async () => {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        router.replace("/login"); // redirection si pas connecté
+      }
+    };
+    checkToken();
+  }, []);
 
   // Charger les données du dashboard
   const fetchDashboard = async () => {
+    if (!api) return;
     try {
-      const res = await api.get("/api/dashboard/summary"); // endpoint réel
+      const res = await api.get("/api/dashboard/summary");
       setDashboard(res.data);
     } catch (err) {
       console.error("Erreur dashboard:", err);
-      Alert.alert("Erreur", err.response?.data?.message || "Impossible de charger le dashboard");
+
+      if (err.response?.status === 401) {
+        // Token expiré ou invalide → redirection login
+        await AsyncStorage.removeItem("token");
+        await AsyncStorage.removeItem("user");
+        Alert.alert("Session expirée", "Veuillez vous reconnecter.");
+        router.replace("/login");
+      } else {
+        Alert.alert("Erreur", err.response?.data?.message || "Impossible de charger le dashboard");
+      }
     }
   };
 
   useEffect(() => {
     fetchDashboard();
-  }, []);
+  }, [api]);
 
-  // Si les données ne sont pas encore chargées
   if (!dashboard) {
     return (
       <View style={[styles.container, { justifyContent: "center", alignItems: "center", backgroundColor: isDarkMode ? "#141829" : "#f7f5f2" }]}>
@@ -47,13 +63,12 @@ export default function Home() {
     );
   }
 
-  // Extraire les données
   const { totalBalance, mainAccount, revenueThisMonth, expenseThisMonth, transactionsCount } = dashboard;
-
-  // Exemple de graphique avec les valeurs du mois (ici on simule 6 mois pour l'affichage)
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
   const revenue = [revenueThisMonth, revenueThisMonth, revenueThisMonth, revenueThisMonth, revenueThisMonth, revenueThisMonth];
   const expenses = [expenseThisMonth, expenseThisMonth, expenseThisMonth, expenseThisMonth, expenseThisMonth, expenseThisMonth];
+
+  const onNavigate = (page) => router.push(`/home/${page}`);
 
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? "#141829" : "#f7f5f2" }]}>
@@ -71,7 +86,6 @@ export default function Home() {
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Titre */}
         <Text style={{ fontSize: 28, fontWeight: "700", color: isDarkMode ? "#f3e8d7" : "#3b322a" }}>
           Bienvenue
         </Text>
@@ -79,7 +93,6 @@ export default function Home() {
           Voici un aperçu de votre tableau de bord.
         </Text>
 
-        {/* Carte Solde Total */}
         <TouchableOpacity
           onPress={() => setShowTotal(!showTotal)}
           style={[styles.card, { backgroundColor: isDarkMode ? "#1a2742" : "#d6c7b4" }]}
@@ -90,7 +103,6 @@ export default function Home() {
           </Text>
         </TouchableOpacity>
 
-        {/* Cartes Dépense / Revenue */}
         <View style={styles.cardsRow}>
           <View style={[styles.smallCard, { backgroundColor: "#f87171" }]}>
             <Text style={styles.cardLabel}>Dépenses</Text>
@@ -102,10 +114,7 @@ export default function Home() {
           </View>
         </View>
 
-        {/* Graphiques */}
-        <Text style={[styles.chartTitle, { color: isDarkMode ? "#f3e8d7" : "#3b322a" }]}>
-          Revenus vs Dépenses
-        </Text>
+        <Text style={[styles.chartTitle, { color: isDarkMode ? "#f3e8d7" : "#3b322a" }]}>Revenus vs Dépenses</Text>
         <BarChart
           data={{
             labels: months,
@@ -131,9 +140,7 @@ export default function Home() {
           style={{ marginVertical: 8, borderRadius: 16 }}
         />
 
-        <Text style={[styles.chartTitle, { color: isDarkMode ? "#f3e8d7" : "#3b322a" }]}>
-          Évolution du solde
-        </Text>
+        <Text style={[styles.chartTitle, { color: isDarkMode ? "#f3e8d7" : "#3b322a" }]}>Évolution du solde</Text>
         <LineChart
           data={{
             labels: months,
@@ -154,7 +161,6 @@ export default function Home() {
           }}
           style={{ marginVertical: 8, borderRadius: 16 }}
         />
-
       </ScrollView>
 
       <MobileNav currentPage="dashboard" isDarkMode={isDarkMode} />

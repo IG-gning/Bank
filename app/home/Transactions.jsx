@@ -27,9 +27,8 @@ export default function Transactions() {
   const totalDepenses = transactions.filter((t) => t.amount < 0).reduce((acc, t) => acc + t.amount, 0);
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity
-      style={[styles.transactionCard, { backgroundColor: isDarkMode ? "#1a2742" : "white" }]}
-      onPress={() => navigation.navigate("TransactionDetails", { transaction: item })}
+    <TouchableOpacity style={[styles.transactionCard, { backgroundColor: isDarkMode ? "#030e25ff" : "white" }]}
+                      onPress={() => navigation.navigate("TransactionDetails", { transaction: item })}
     >
       <View style={[styles.iconContainer, { backgroundColor: "#e8dcc7" }]}>
         <FontAwesome5 name={item.icon} size={20} color="#6b5a49" />
@@ -38,12 +37,7 @@ export default function Transactions() {
       <View style={styles.transactionInfo}>
         <Text style={[styles.transactionTitle, { color: isDarkMode ? "#f3e8d7" : "#000" }]} numberOfLines={1}>
           {item.title}
-          <Text
-            style={[
-              styles.statusBadge,
-              item.status === "Complété" ? styles.completed : styles.pending,
-            ]}
-          >
+          <Text style={[ styles.statusBadge, item.status === "Complété" ? styles.completed : styles.pending,]}>
             {"  "}{item.status}
           </Text>
         </Text>
@@ -52,13 +46,11 @@ export default function Transactions() {
         </Text>
       </View>
 
-      <Text
-        style={[
-          styles.transactionAmount,
-          item.amount > 0 ? styles.positive : styles.negative,
-          { color: item.amount > 0 ? "green" : "red" },
+      <Text style={[ styles.transactionAmount, 
+            item.amount > 0 ? styles.positive : styles.negative,
+            { color: item.amount > 0 ? "green" : "red" },
         ]}
-      >
+      > 
         {item.amount > 0 ? "+" : ""}
         {item.amount.toFixed(2)} €
       </Text>
@@ -66,64 +58,83 @@ export default function Transactions() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDarkMode ? "#141829" : "#fff" }}>
+    <View style={{ flex: 1, backgroundColor: isDarkMode ? "#010517ff" : "#fff" }}>
       {/* Sidebar */}
       <Sidebar visible={sidebarOpen} onClose={() => setSidebarOpen(false)} isDarkMode={isDarkMode} />
 
       {/* Header */}
-      <Header
-        title="Transactions"
-        isDarkMode={isDarkMode}
-        onToggleTheme={toggleTheme}
-        onMenuPress={() => setSidebarOpen(true)}
+      <Header title="Transactions"
+              isDarkMode={isDarkMode}
+              onToggleTheme={toggleTheme}
+              onMenuPress={() => setSidebarOpen(true)}
       />
 
       <ScrollView contentContainerStyle={{ padding: 16 }}>
+
         <Text style={[styles.pageSubtitle, { color: isDarkMode ? "#bfa98a" : "gray" }]}>
           Voici la liste de vos transactions récentes.
         </Text>
 
         {/* CARDS */}
         <View style={styles.cardsContainer}>
-          <View style={[styles.card, { backgroundColor: "#e8dcc7" }]}>
+{/* .................................card 1.................................... */}
+          <View 
+           style={[styles.card, { backgroundColor: "#e8dcc7", borderLeft:"4px solid #5b4636",
+           ...(!isDarkMode 
+             ? {shadowColor: "#a8a8a8ff", shadowOffset: { width: 10, height: 10 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 10}
+             : {shadowColor: "transparent", shadowOpacity: 0, elevation: 0,  borderLeftColor: "#2b5ce7",}), 
+           }]}>  
             <Text style={styles.cardTitle}>
               Total Transactions : <Text style={styles.cardValue}>{transactions.length}</Text>
             </Text>
             <Text style={styles.cardSubtitle}> Ce mois </Text>
           </View>
 
-          <View style={[styles.card, { backgroundColor: "#e8dcc7" }]}>
+{/* .................................card 2.................................... */}
+           <View 
+            style={[styles.card, { backgroundColor: "#e8dcc7", borderLeft:"4px solid #5b4636",
+            ...(!isDarkMode 
+             ? {shadowColor: "#a8a8a8ff", shadowOffset: { width: 10, height: 10 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 10}
+             : {shadowColor: "transparent", shadowOpacity: 0, elevation: 0, borderLeftColor:"#2e7d32"}), 
+            }]}>  
+            
             <Text style={styles.cardTitle}>
               Total Revenus : <Text style={styles.revenue}>+{totalRevenus.toFixed(2)} €</Text>
             </Text>
             <Text style={styles.cardSubtitle}> Ce mois </Text>
           </View>
 
-          <View style={[styles.card, { backgroundColor: "#e8dcc7" }]}>
+{/* .................................card 3.................................... */}
+          <View
+            style={[styles.card, { backgroundColor: "#e8dcc7", borderLeft:"4px solid #5b4636",
+            ...(!isDarkMode 
+             ? {shadowColor: "#a8a8a8ff", shadowOffset: { width: 10, height: 10 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 10}
+             : {shadowColor: "transparent", shadowOpacity: 0, elevation: 0, borderLeftColor:"#c62828"}), 
+            }]}>  
             <Text style={styles.cardTitle}>
               Total Dépenses : <Text style={styles.expense}>{totalDepenses.toFixed(2)} €</Text>
             </Text>
             <Text style={styles.cardSubtitle}> Ce mois </Text>
           </View>
+
         </View>
 
-        {/* LISTE */}
-        <FlatList
-          data={transactions.slice(0, visibleCount)}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
-          scrollEnabled={false}
+{/* ................................LISTE transaction.......................................... */}
+        <FlatList data={transactions.slice(0, visibleCount)}
+                  renderItem={renderItem}
+                  keyExtractor={(item) => item.id.toString()}
+                  scrollEnabled={false}
         />
 
-        <TouchableOpacity
-          style={styles.showMoreBtn}
-          onPress={() => {
-            setIsExpanded(!isExpanded);
-            setVisibleCount(isExpanded ? 3 : transactions.length);
-          }}
+        <TouchableOpacity style={styles.showMoreBtn}
+                onPress={() => {
+                  setIsExpanded(!isExpanded);
+                  setVisibleCount(isExpanded ? 3 : transactions.length);
+                }}
         >
           <Text style={styles.showMoreText}>{isExpanded ? "Masquer" : "Voir +"}</Text>
         </TouchableOpacity>
+
       </ScrollView>
 
       {/* Mobile Navigation */}
@@ -164,4 +175,5 @@ const styles = StyleSheet.create({
 
   showMoreBtn: { marginTop: 20, padding: 12, borderRadius: 10, backgroundColor: "#e8dcc7", alignItems: "center", marginBottom:100 },
   showMoreText: { fontWeight: "bold", color: "#6b5a49" },
+  list:{boxShadow:"10px 10px 10px black"}
 });

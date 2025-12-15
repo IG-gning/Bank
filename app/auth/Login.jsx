@@ -107,7 +107,7 @@ export default function Login() {
           <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
-            placeholder="jean.dupont@exemple.fr"
+            placeholder="Email@exemple.fr"
             keyboardType="email-address"
             value={email}
             onChangeText={setEmail}
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   input: { backgroundColor: "#fdfdffff", padding: 12, borderRadius: 10, borderWidth: 1, borderColor: "#3b322a", color: "#3b322a" },
   passwordWrapper: { flexDirection: "row", alignItems: "center" },
   inputPassword: { flex: 1, backgroundColor: "#ffffffff", padding: 12, borderRadius: 10, borderWidth: 1, borderColor: "#3b322a", color: "#3b322a" },
-  showPass: { marginLeft: 10, fontSize: 18, color: "#bfa98a" },
+  showPass: { marginLeft: 10, fontSize: 22, color: "#bfa98a", position:"absolute", right:20, top:-10},
   submitBtn: { marginTop: 10, backgroundColor: "#d6c7b4", padding: 12, borderRadius: 12, alignItems: "center", shadowColor: "#d6c7b4", shadowOpacity: 0.5, shadowOffset: { width: 0, height: 5 }, shadowRadius: 10 },
   submitText: { color: "#141829", fontSize: 16, fontWeight: "700" },
   toggleContainer: { flexDirection: "row", justifyContent: "center", marginTop: 15, flexWrap: "wrap" },
