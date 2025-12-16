@@ -1,15 +1,8 @@
 import { useRouter } from "expo-router";
 import React, { useContext, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-  Alert,
-  Dimensions,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert,  Dimensions, StyleSheet, Text, TextInput, TouchableOpacity, View, } from "react-native";
+ 
 import { BackendContext } from "../context"; // <-- BackendContext pour axios
 
 const { width, height } = Dimensions.get("window");

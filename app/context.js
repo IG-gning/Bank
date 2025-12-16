@@ -9,13 +9,14 @@ export const BackendContext = createContext(null);
 export const api = axios.create({
   baseURL:
     Platform.OS === "web"
-     ? "http://localhost:8081/"
-      : "http://192.168.1.13:5000",
+      ? "http://localhost:5000"   // ✅ backend
+      : "http://192.168.68.198:5000",
   timeout: 5000,
   headers: {
     "Content-Type": "application/json",
   },
 });
+
 
 // Token utils
 export const getToken = async () => {
@@ -72,6 +73,27 @@ export const makeExternalTransfer = async (data) => {
     return res.data;
   } catch (err) {
     console.error("Erreur makeExternalTransfer:", err.response?.data || err);
+    throw err;
+  }
+};
+
+
+export const createSupportTicket = async (data) => {
+  try {
+    const token = await getToken();
+
+    const res = await api.post("/support", data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return res.data;
+  } catch (err) {
+    console.error(
+      "Erreur createSupportTicket:",
+      err.response?.data || err
+    );
     throw err;
   }
 };
