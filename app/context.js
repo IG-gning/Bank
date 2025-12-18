@@ -10,7 +10,7 @@ export const api = axios.create({
   baseURL:
     Platform.OS === "web"
       ? "http://localhost:5000"   // ✅ backend
-      : "http://192.168.68.198:5000",
+      : "http://192.168.68.208:5000",
   timeout: 5000,
   headers: {
     "Content-Type": "application/json",
@@ -78,22 +78,21 @@ export const makeExternalTransfer = async (data) => {
 };
 
 
+// Création d'un ticket support
 export const createSupportTicket = async (data) => {
   try {
     const token = await getToken();
 
-    const res = await api.post("/support", data, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const res = await api.post("/api/support", data, {  // <-- ajouter /api
+      headers: token
+        ? { Authorization: `Bearer ${token}` }
+        : undefined,
     });
 
     return res.data;
   } catch (err) {
-    console.error(
-      "Erreur createSupportTicket:",
-      err.response?.data || err
-    );
+    console.error("❌ ERREUR createSupportTicket FRONT :", err.response?.data || err.message);
     throw err;
   }
 };
+
