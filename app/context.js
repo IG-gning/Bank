@@ -9,7 +9,7 @@ export const BackendContext = createContext(null);
 export const api = axios.create({
   baseURL:
     Platform.OS === "web"
-      ? "http://localhost:5000"   // ✅ backend
+      ? "https://banking-backend-rtsx.onrender.com"   // ✅ backend
       : "http://192.168.68.208:5000",
   timeout: 5000,
   headers: {
