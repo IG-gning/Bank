@@ -1,18 +1,47 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Modal, TextInput, StyleSheet, FlatList, ScrollView } from "react-native";
-  
-
+// app/Payments/Payment.jsx
+import React, { useState, useEffect, useContext } from "react";
+import { View, Text, TouchableOpacity, Modal, TextInput, StyleSheet, FlatList, Alert } from "react-native";
 import Header from "../components/Header";
 import MobileNav from "../components/MobileNav";
 import Sidebar from "../components/Sidebar";
 import { useTheme } from "../context/ThemeContext";
-
+import axios from "axios"; // Assure-toi que axios est installé
+import { BackendContext } from "../context"; // Context avec l'instance axios
 
 // ---------- FORMULAIRE DE PAIEMENT ----------
-function PaymentForm({ type, onConfirm, onClose, isDarkMode }) {
+function PaymentForm({ type, onConfirm, onClose, isDarkMode, selectedAccount }) {
   const [fournisseur, setFournisseur] = useState("");
   const [montant, setMontant] = useState("");
   const [facture, setFacture] = useState("");
+
+  const api = useContext(BackendContext);
+
+  const handleSubmit = async () => {
+    if (!fournisseur || !montant) return Alert.alert("Erreur", "Veuillez remplir les champs obligatoires.");
+
+    try {
+      // Appel backend
+      await api.post("/api/payments", {
+        accountId: selectedAccount,
+        service: fournisseur,
+        amount: Number(montant),
+        reference: facture,
+      });
+
+      const newEntry = {
+        type,
+        fournisseur,
+        montant,
+        facture,
+        date: new Date().toLocaleDateString(),
+      };
+      onConfirm(newEntry);
+      Alert.alert("Succès", "Paiement effectué !");
+    } catch (err) {
+      console.log(err.response?.data || err.message);
+      Alert.alert("Erreur", "Impossible de traiter le paiement");
+    }
+  };
 
   return (
     <View style={{ padding: 10, backgroundColor: isDarkMode ? "#141829" : "#fff" }}>
@@ -22,33 +51,34 @@ function PaymentForm({ type, onConfirm, onClose, isDarkMode }) {
       </View>
 
       <Text style={[styles.label, { color: isDarkMode ? "#f3e8d7" : "#444" }]}>Fournisseur</Text>
-      <TextInput style={[styles.input, { backgroundColor: isDarkMode ? "#1a2742" : "#f3f3f3", color: isDarkMode ? "#f3e8d7" : "#000" }]} 
-        value={fournisseur} 
-        onChangeText={setFournisseur} 
-        placeholder="Nom du fournisseur" 
+      <TextInput
+        style={[styles.input, { backgroundColor: isDarkMode ? "#1a2742" : "#f3f3f3", color: isDarkMode ? "#f3e8d7" : "#000" }]}
+        value={fournisseur}
+        onChangeText={setFournisseur}
+        placeholder="Nom du fournisseur"
         placeholderTextColor={isDarkMode ? "#bfa98a" : "#888"}
       />
-        
+
       <Text style={[styles.label, { color: isDarkMode ? "#f3e8d7" : "#444" }]}>Montant</Text>
-      <TextInput  style={[styles.input, { backgroundColor: isDarkMode ? "#1a2742" : "#f3f3f3", color: isDarkMode ? "#f3e8d7" : "#000" }]} 
-        keyboardType="numeric" 
-        value={montant} 
-        onChangeText={setMontant} 
-        placeholder="0.00" 
+      <TextInput
+        style={[styles.input, { backgroundColor: isDarkMode ? "#1a2742" : "#f3f3f3", color: isDarkMode ? "#f3e8d7" : "#000" }]}
+        keyboardType="numeric"
+        value={montant}
+        onChangeText={setMontant}
+        placeholder="0.00"
         placeholderTextColor={isDarkMode ? "#bfa98a" : "#888"}
       />
-       
+
       <Text style={[styles.label, { color: isDarkMode ? "#f3e8d7" : "#444" }]}>Numéro de facture</Text>
-      <TextInput style={[styles.input, { backgroundColor: isDarkMode ? "#1a2742" : "#f3f3f3", color: isDarkMode ? "#f3e8d7" : "#000" }]} 
-        value={facture} 
-        onChangeText={setFacture} 
-        placeholder="Ex: 123456789" 
+      <TextInput
+        style={[styles.input, { backgroundColor: isDarkMode ? "#1a2742" : "#f3f3f3", color: isDarkMode ? "#f3e8d7" : "#000" }]}
+        value={facture}
+        onChangeText={setFacture}
+        placeholder="Ex: 123456789"
         placeholderTextColor={isDarkMode ? "#bfa98a" : "#888"}
       />
-         
-      <TouchableOpacity style={[styles.submit, { backgroundColor: "#6b5a49" }]}
-        onPress={() => onConfirm({ type, fournisseur, montant, facture, date: new Date().toLocaleDateString() })}
-      >
+
+      <TouchableOpacity style={[styles.submit, { backgroundColor: "#6b5a49" }]} onPress={handleSubmit}>
         <Text style={styles.submitText}>Confirmer le paiement</Text>
       </TouchableOpacity>
 
@@ -61,22 +91,51 @@ function PaymentForm({ type, onConfirm, onClose, isDarkMode }) {
 
 // ---------- PAGE PRINCIPALE ----------
 export default function PaymentsScreen() {
-  const [activeForm, setActiveForm] = useState(null); 
+  const [activeForm, setActiveForm] = useState(null);
   const [historique, setHistorique] = useState([]);
   const { isDarkMode, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState(null);
+  const api = useContext(BackendContext);
+
+  // Récupérer l'historique depuis le backend
+  useEffect(() => {
+    if (!selectedAccount) return;
+    fetchHistorique();
+  }, [selectedAccount]);
+
+  const fetchHistorique = async () => {
+    try {
+      const res = await api.get(`/api/payments/${selectedAccount}`);
+      const data = res.data.map(p => ({
+        type: p.service,
+        fournisseur: p.service,
+        montant: p.amount,
+        facture: p.reference || "—",
+        date: new Date(p.date).toLocaleDateString(),
+      }));
+      setHistorique(data);
+    } catch (err) {
+      console.log(err);
+      Alert.alert("Erreur", "Impossible de charger l'historique");
+    }
+  };
 
   const closeForm = () => setActiveForm(null);
-  const ajouterPaiement = (data) => { setHistorique(prev => [data, ...prev]); closeForm(); };
+  const ajouterPaiement = (data) => {
+    setHistorique(prev => [data, ...prev]);
+    closeForm();
+  };
 
   const renderHeader = () => (
     <View>
       {/* Grid boutons */}
       <View style={styles.grid}>
         {["Mobile", "Internet", "Électricité", "Eau"].map((type) => (
-          <TouchableOpacity style={[styles.cardBtn, { backgroundColor: isDarkMode ? "#030e25ff" : "#fff" }]} 
-                            key={type} 
-                            onPress={() => setActiveForm(type)}
+          <TouchableOpacity
+            style={[styles.cardBtn, { backgroundColor: isDarkMode ? "#030e25ff" : "#fff" }]}
+            key={type}
+            onPress={() => setActiveForm(type)}
           >
             <Text style={styles.cardIcon}>
               {type === "Mobile" ? "📱" :
@@ -100,9 +159,10 @@ export default function PaymentsScreen() {
       <Sidebar visible={sidebarOpen} onClose={() => setSidebarOpen(false)} isDarkMode={isDarkMode} />
       <Header title="Paiements" isDarkMode={isDarkMode} onToggleTheme={toggleTheme} onMenuPress={() => setSidebarOpen(true)} />
 
-      <FlatList data={historique}
-                keyExtractor={(_, idx) => String(idx)}
-                ListHeaderComponent={renderHeader}
+      <FlatList
+        data={historique}
+        keyExtractor={(_, idx) => String(idx)}
+        ListHeaderComponent={renderHeader}
         renderItem={({ item }) => (
           <View style={[styles.historyItem, { backgroundColor: isDarkMode ? "#1a2742" : "#fff" }]}>
             <Text style={[styles.historyItemTitle, { color: isDarkMode ? "#f3e8d7" : "#000" }]}>
@@ -125,17 +185,19 @@ export default function PaymentsScreen() {
               <Text style={styles.modalCloseText}>X</Text>
             </TouchableOpacity>
             {activeForm && (
-              <PaymentForm type={activeForm}
-                          onConfirm={ajouterPaiement} 
-                          onClose={closeForm} 
-                          isDarkMode={isDarkMode}
+              <PaymentForm
+                type={activeForm}
+                onConfirm={ajouterPaiement}
+                onClose={closeForm}
+                isDarkMode={isDarkMode}
+                selectedAccount={selectedAccount}
               />
             )}
           </View>
         </View>
       </Modal>
-      <MobileNav currentPage="payments" isDarkMode={isDarkMode} />
 
+      <MobileNav currentPage="payments" isDarkMode={isDarkMode} />
     </View>
   );
 }

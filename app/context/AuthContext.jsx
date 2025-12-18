@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
 
   // Crée un instance Axios qui inclut le token automatiquement
   const api = axios.create({
-    baseURL: "http://TON_BACKEND", // ← change par ton backend
+    baseURL: "https://banking-backend-rtsx.onrender.com", // ← change par ton backend
     timeout: 10000,
   });
 

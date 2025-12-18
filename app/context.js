@@ -6,10 +6,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export const BackendContext = createContext(null);
 
 export const api = axios.create({
-  baseURL:
-    Platform.OS === "web"
-      ? "http://localhost:5000"
-      : "http://192.168.68.249:5000",
+  baseURL: "https://banking-backend-rtsx.onrender.com", // ✅ URL Render
   timeout: 5000,
   headers: {
     "Content-Type": "application/json",

@@ -25,27 +25,30 @@ export default function Accounts({ onNavigate, currentPage }) {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-
   const [comptes, setComptes] = useState([]);
 
   const [showSoldes, setShowSoldes] = useState([]);
   const [showCardNumber, setShowCardNumber] = useState([]);
   const [showCardSolde, setShowCardSolde] = useState([]);
-  const spinValue = useRef([]).current;
   const [isBack, setIsBack] = useState([]);
+
+  const spinValue = useRef([]).current;
 
   useEffect(() => {
     const fetchAccounts = async () => {
+      setLoading(true);
       try {
-        const res = await api.get("/api/accounts"); // Récupère les comptes
-        setComptes(res.data);
+        const res = await api.get("/api/accounts"); // Récupération comptes backend
+        const comptesData = Array.isArray(res.data) ? res.data : [];
 
-        setShowSoldes(res.data.map(() => true));
-        setShowCardNumber(res.data.map(() => false));
-        setShowCardSolde(res.data.map(() => true));
-        setIsBack(res.data.map(() => false));
+        setComptes(comptesData);
+        setShowSoldes(comptesData.map(() => true));
+        setShowCardNumber(comptesData.map(() => false));
+        setShowCardSolde(comptesData.map(() => true));
+        setIsBack(comptesData.map(() => false));
 
-        res.data.forEach(() => spinValue.push(new Animated.Value(0)));
+        // Animated flip values
+        comptesData.forEach(() => spinValue.push(new Animated.Value(0)));
       } catch (err) {
         console.error("Erreur fetch comptes :", err.response?.data || err);
         Alert.alert("Erreur", "Impossible de récupérer les comptes");
@@ -53,8 +56,9 @@ export default function Accounts({ onNavigate, currentPage }) {
         setLoading(false);
       }
     };
+
     fetchAccounts();
-  }, []);
+  }, [api]);
 
   const flipCard = (index) => {
     Animated.timing(spinValue[index], {
@@ -62,6 +66,7 @@ export default function Accounts({ onNavigate, currentPage }) {
       duration: 500,
       useNativeDriver: true,
     }).start();
+
     const newBack = [...isBack];
     newBack[index] = !newBack[index];
     setIsBack(newBack);
@@ -86,7 +91,13 @@ export default function Accounts({ onNavigate, currentPage }) {
   };
 
   if (loading) {
-    return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+    return (
+      <ActivityIndicator
+        size="large"
+        color={colors.primary}
+        style={{ flex: 1, justifyContent: "center" }}
+      />
+    );
   }
 
   return (
@@ -125,7 +136,12 @@ export default function Accounts({ onNavigate, currentPage }) {
                 </Text>
                 <TouchableOpacity
                   onPress={() => flipCard(i)}
-                  style={{ backgroundColor: colors.primary, paddingVertical: 6, paddingHorizontal: 15, borderRadius: 10 }}
+                  style={{
+                    backgroundColor: colors.primary,
+                    paddingVertical: 6,
+                    paddingHorizontal: 15,
+                    borderRadius: 10,
+                  }}
                 >
                   <Text style={{ color: "#fff", fontWeight: "700" }}>Voir +</Text>
                 </TouchableOpacity>
@@ -134,12 +150,15 @@ export default function Accounts({ onNavigate, currentPage }) {
               {/* Flip Card */}
               <View style={{ marginTop: 10 }}>
                 <Animated.View
-                  style={[styles.cardContainer, { transform: [{ rotateY: frontInterpolate }], position: isBack[i] ? "absolute" : "relative" }]}
+                  style={[
+                    styles.cardContainer,
+                    { transform: [{ rotateY: frontInterpolate }], position: isBack[i] ? "absolute" : "relative" },
+                  ]}
                 >
                   <LinearGradient colors={["#432703", "#a28870"]} style={styles.bankCard}>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                       <Text style={styles.cardNumber}>
-                        {showCardNumber[i] ? c.accountNumber : "**** **** **** ****" }
+                        {showCardNumber[i] ? c.accountNumber : "**** **** **** ****"}
                       </Text>
                       <TouchableOpacity onPress={() => toggleCardNumber(i)}>
                         <FontAwesome name={showCardNumber[i] ? "eye" : "eye-slash"} size={20} color="#fff" />
@@ -161,7 +180,10 @@ export default function Accounts({ onNavigate, currentPage }) {
                 </Animated.View>
 
                 <Animated.View
-                  style={[styles.cardContainer, { transform: [{ rotateY: backInterpolate }], position: isBack[i] ? "relative" : "absolute" }]}
+                  style={[
+                    styles.cardContainer,
+                    { transform: [{ rotateY: backInterpolate }], position: isBack[i] ? "relative" : "absolute" },
+                  ]}
                 >
                   <LinearGradient colors={["#432703", "#a28870"]} style={styles.bankCard}>
                     <View style={styles.blackStripe} />
@@ -174,7 +196,16 @@ export default function Accounts({ onNavigate, currentPage }) {
               </View>
 
               {/* Solde compte */}
-              <View style={{ marginTop: 10, padding: 15, borderRadius: 16, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
+              <View
+                style={{
+                  marginTop: 10,
+                  padding: 15,
+                  borderRadius: 16,
+                  backgroundColor: colors.card,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
+              >
                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                   <View style={{ flexDirection: "row", alignItems: "center" }}>
                     <Ionicons name="wallet" size={18} color={colors.primary} />

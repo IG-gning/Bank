@@ -99,18 +99,18 @@ export default function Home() {
         >
           <Text style={{ fontSize: 18, color: "#fff" }}>Solde Total</Text>
           <Text style={{ fontSize: 28, fontWeight: "700", color: "#fff" }}>
-            {showTotal ? `${totalBalance.toLocaleString()} €` : "****"}
+            {showTotal ? `${totalBalance.toLocaleString()} Fcfa` : "****"}
           </Text>
         </TouchableOpacity>
 
         <View style={styles.cardsRow}>
           <View style={[styles.smallCard, { backgroundColor: "#f87171" }]}>
             <Text style={styles.cardLabel}>Dépenses</Text>
-            <Text style={styles.cardValue}>-{expenseThisMonth.toLocaleString()} €</Text>
+            <Text style={styles.cardValue}>-{expenseThisMonth.toLocaleString()} Fcfa</Text>
           </View>
           <View style={[styles.smallCard, { backgroundColor: "#4ade80" }]}>
             <Text style={styles.cardLabel}>Revenus</Text>
-            <Text style={styles.cardValue}>+{revenueThisMonth.toLocaleString()} €</Text>
+            <Text style={styles.cardValue}>+{revenueThisMonth.toLocaleString()} Fcfa</Text>
           </View>
         </View>
 
