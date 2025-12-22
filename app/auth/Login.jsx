@@ -22,39 +22,58 @@ export default function Login() {
   const router = useRouter();
   const api = useContext(BackendContext); // <-- axios instance
   
-  const handleSubmit = async () => {
-    try {
-      if (isSignUp) {
-        // Signup
-        const res = await api.post("/api/auth/register", { // <-- corrigé ici
-          name,
-          prenom,
-          email,
-          password,
-          telephone,
-          dateDeNaissance,
-        });
-        Alert.alert("Succès", res.data.message);
-        router.push("/home");
-      } else {
-        // Login
-        const res = await api.post("/api/auth/login", { // <-- corrigé ici
-          email,
-          password,
-        });
-        await AsyncStorage.setItem("token", res.data.token);
-        Alert.alert("Succès", res.data.message);
-        router.push("/home");
-        
+ const handleSubmit = async () => {
+  try {
+    if (isSignUp) {
+      // ✅ VALIDATION FRONT
+      if (
+        !name.trim() ||
+        !prenom.trim() ||
+        !email.trim() ||
+        !password.trim() ||
+        !telephone.trim() ||
+        !dateDeNaissance.trim()
+      ) {
+        return Alert.alert("Erreur", "Veuillez remplir tous les champs");
       }
-    } catch (err) {
-      console.error(err);
-      Alert.alert(
-        "Erreur",
-        err.response?.data?.message || "Impossible de se connecter"
-      );
+
+      const res = await api.post("/api/auth/register", {
+        name,
+        prenom,
+        email,
+        password,
+        telephone,
+        dateDeNaissance,
+      });
+
+      Alert.alert("Succès", res.data.message);
+      router.push("/home");
+
+    } else {
+      // LOGIN
+      if (!email.trim() || !password.trim()) {
+        return Alert.alert("Erreur", "Email et mot de passe requis");
+      }
+
+      const res = await api.post("/api/auth/login", {
+        email,
+        password,
+      });
+
+      await AsyncStorage.setItem("token", res.data.token);
+      Alert.alert("Succès", res.data.message);
+      router.push("/home");
     }
-  };
+
+  } catch (err) {
+    console.error("LOGIN ERROR :", err.response?.data || err.message);
+    Alert.alert(
+      "Erreur",
+      err.response?.data?.message || "Impossible de se connecter"
+    );
+  }
+};
+
 
   return (
     <View style={styles.container}>
@@ -122,6 +141,31 @@ export default function Login() {
             </TouchableOpacity>
           </View>
         </View>
+        {!isSignUp && (
+  <TouchableOpacity
+    onPress={async () => {
+      if (!email) {
+        return Alert.alert("Erreur", "Entrez votre email");
+      }
+
+      try {
+        const res = await api.post("/api/auth/forgot-password", { email });
+        Alert.alert("Succès", res.data.message);
+      } catch (err) {
+        Alert.alert(
+          "Erreur",
+          err.response?.data?.message || "Erreur serveur"
+        );
+      }
+    }}
+  >
+    <Text style={{ color: "#bfa98a", marginBottom: 15, textAlign: "right" }}>
+      Mot de passe oublié ?
+    </Text>
+  </TouchableOpacity>
+)}
+
+
 
         {isSignUp && (
           <>

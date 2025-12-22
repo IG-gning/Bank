@@ -33,7 +33,7 @@ export default function Sidebar({ visible, onClose, isDarkMode }) {
     { label: "Transactions", icon: Receipt, page: "/home/Transactions" },
     { label: "Mes Cartes", icon: CreditCard, page: "/Accounts" },
     { label: "Paramètres", icon: Settings, page: "/settings" },
-    { label: "Support & Aide", icon: HelpCircle, page: "/Support" },
+    { label: "Support & Aide", icon: HelpCircle, page: "/support" },
     { label: "Se déconnecter", icon: LogOut, page: "/auth/Login", logout: true },
   ];
 
@@ -48,7 +48,7 @@ const handlePress = (item) => {
   router.push(item.page);
   onClose?.();
 
-  
+  console.log("Navigate to:", item.page);
 };
 
 

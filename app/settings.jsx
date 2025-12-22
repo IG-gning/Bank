@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { View, ScrollView, TouchableOpacity, Text, Switch } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 
-// // Components
+// Components
+import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import MobileNav from "./components/MobileNav";
-import Sidebar from "./components/Sidebar";
 
 // Theme Context
 import { useTheme } from "./context/ThemeContext";
@@ -17,7 +17,7 @@ export default function ProfilePage({ onNavigate, currentPage }) {
   const [emailNotif, setEmailNotif] = useState(true);
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDarkMode ? "#010517ff" : "#f7f5f2"  }}>
+    <View style={{ flex: 1, backgroundColor: isDarkMode ? "#010517ff" : "#f7f5f2" }}>
       {/* SIDEBAR */}
       <Sidebar
         visible={sidebarOpen}
@@ -26,8 +26,8 @@ export default function ProfilePage({ onNavigate, currentPage }) {
         onNavigate={onNavigate}
       />
 
-//       {/* HEADER */}
-//       <Header
+      {/* HEADER */}
+      <Header
         title="Mon Profil"
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
@@ -54,8 +54,8 @@ export default function ProfilePage({ onNavigate, currentPage }) {
           />
         </SettingsGroup>
 
-//         <SettingsGroup title="Notifications" desc="Gérez vos alertes" colors={colors}>
-//           <SettingSwitch
+        <SettingsGroup title="Notifications" desc="Gérez vos alertes" colors={colors}>
+          <SettingSwitch
             icon="envelope"
             label="Notifications email"
             sub="Recevoir des emails"
@@ -83,9 +83,9 @@ export default function ProfilePage({ onNavigate, currentPage }) {
   );
 }
 
-// /* -------------------------------------------
-//    UI COMPONENTS
-// -------------------------------------------- */
+/* -------------------------------------------
+   UI COMPONENTS
+-------------------------------------------- */
 
 const SettingsGroup = ({ title, desc, colors, children }) => (
   <View
@@ -96,8 +96,8 @@ const SettingsGroup = ({ title, desc, colors, children }) => (
       borderRadius: 18,
       borderWidth: 1,
       borderColor: colors.border,
-      borderLeft:"4px solid #3b322a"
-      
+      borderLeftWidth: 4,
+      borderLeftColor: "#3b322a"
     }}
   >
     <Text style={{ fontSize: 18, fontWeight: "700", color: colors.text }}>{title}</Text>

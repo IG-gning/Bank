@@ -17,7 +17,7 @@ export default function Header({ isDarkMode, onToggleTheme, onMenuPress, user })
       </TouchableOpacity>
 
       <View style={styles.searchWrapper}>
-        <Ionicons name="search-outline" size={20} color={isDarkMode ? "#bfa98a" : "#5b4636"} style={styles.iconSearch}/>
+        <Ionicons name="search-outline" size={20} color={isDarkMode ? "#bfa98a" : "#5b4636"}/>
         <TextInput
           placeholder="Rechercher..."
           placeholderTextColor={isDarkMode ? "#bfa98a" : "#5b4636"}

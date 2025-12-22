@@ -1,66 +1,132 @@
-import { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView } from "react-native";
+import { useEffect, useState, useContext } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  ScrollView,
+  TextInput,
+} from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
 import Header from "../components/Header";
 import MobileNav from "../components/MobileNav";
 import Sidebar from "../components/Sidebar";
 import { useNavigation } from "@react-navigation/native";
 import { useTheme } from "../context/ThemeContext";
+import { BackendContext } from "../context";
 
 import { fetchTransactions } from "../context";
 
 export default function Transactions() {
   const navigation = useNavigation();
+  const api = useContext(BackendContext);
   const { isDarkMode, toggleTheme } = useTheme();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [transactions, setTransactions] = useState([]);
+  const [stats, setStats] = useState({
+    revenueThisMonth: 0,
+    expenseThisMonth: 0,
+    totalTransactionsThisMonth: 0,
+  });
+
   const [visibleCount, setVisibleCount] = useState(3);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const [transactions, setTransactions] = useState([]); // ✅ backend
-  const [loading, setLoading] = useState(true);
+  // 🔍 Search & Filters
+  const [search, setSearch] = useState("");
+  const [filterType, setFilterType] = useState("all");
 
   useEffect(() => {
-    const loadTransactions = async () => {
-      try {
-        const data = await fetchTransactions(); // 🔗 backend
-        setTransactions(data);
-      } catch (error) {
-        console.log("Erreur chargement transactions :", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadTransactions();
+    fetchTransactions();
   }, []);
 
-  const totalRevenus = transactions
-    .filter((t) => t.amount > 0)
-    .reduce((acc, t) => acc + t.amount, 0);
+  const fetchTransactions = async () => {
+    const res = await api.get("/api/transactions");
+    setTransactions(res.data.transactions);
+    setStats({
+      revenueThisMonth: res.data.revenueThisMonth,
+      expenseThisMonth: res.data.expenseThisMonth,
+      totalTransactionsThisMonth: res.data.totalTransactionsThisMonth,
+    });
+  };
 
-  const totalDepenses = transactions
-    .filter((t) => t.amount < 0)
-    .reduce((acc, t) => acc + t.amount, 0);
+  const mapTransaction = (t) => {
+    const isPositive = t.type === "depot" || t.type === "external_transfer";
+
+    return {
+      id: t._id,
+      rawType: t.type,
+      title:
+        t.type === "depot"
+          ? "Dépôt"
+          : t.type === "retrait"
+          ? "Retrait"
+          : t.type === "internal_transfer"
+          ? "Transfert interne"
+          : "Virement externe",
+      category: t.type.replace("_", " "),
+      amount: isPositive ? t.amount : -t.amount,
+      date: new Date(t.createdAt).toLocaleString(),
+      icon:
+        t.type === "depot"
+          ? "cash-register"
+          : t.type === "retrait"
+          ? "money-bill-wave"
+          : t.type === "internal_transfer"
+          ? "exchange-alt"
+          : "university",
+      status: "Complété",
+    };
+  };
+
+  // 🎯 FILTER LOGIC
+  const filteredTransactions = transactions
+    .map(mapTransaction)
+    .filter((t) => {
+      const matchSearch =
+        t.title.toLowerCase().includes(search.toLowerCase()) ||
+        t.category.toLowerCase().includes(search.toLowerCase());
+
+      const matchType =
+        filterType === "all" ? true : t.rawType === filterType;
+
+      return matchSearch && matchType;
+    });
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
-      style={[styles.transactionCard, { backgroundColor: isDarkMode ? "#1a2742" : "white" }]}
-      onPress={() => navigation.navigate("TransactionDetails", { transaction: item })}
+      style={[
+        styles.transactionCard,
+        { backgroundColor: isDarkMode ? "#030e25ff" : "white" },
+      ]}
+      onPress={() =>
+        navigation.navigate("TransactionDetails", { transaction: item })
+      }
     >
       <View style={[styles.iconContainer, { backgroundColor: "#e8dcc7" }]}>
         <FontAwesome5 name={item.icon || "exchange-alt"} size={20} color="#6b5a49" />
       </View>
 
       <View style={styles.transactionInfo}>
-        <Text style={[styles.transactionTitle, { color: isDarkMode ? "#f3e8d7" : "#000" }]} numberOfLines={1}>
+        <Text
+          style={[
+            styles.transactionTitle,
+            { color: isDarkMode ? "#f3e8d7" : "#000" },
+          ]}
+        >
           {item.title}
           <Text style={[styles.statusBadge, styles.completed]}>
             {"  "}Complété
           </Text>
         </Text>
-
-        <Text style={[styles.transactionSubtitle, { color: isDarkMode ? "#bfa98a" : "gray" }]}>
+        <Text
+          style={[
+            styles.transactionSubtitle,
+            { color: isDarkMode ? "#bfa98a" : "gray" },
+          ]}
+        >
           {item.date} • {item.category}
         </Text>
       </View>
@@ -68,21 +134,23 @@ export default function Transactions() {
       <Text
         style={[
           styles.transactionAmount,
-          { color: item.amount > 0 ? "green" : "red" },
+          item.amount > 0 ? styles.positive : styles.negative,
         ]}
       >
         {item.amount > 0 ? "+" : ""}
-        {item.amount.toFixed(2)} €
+        {item.amount.toFixed(2)} Fcfa
       </Text>
     </TouchableOpacity>
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDarkMode ? "#141829" : "#fff" }}>
-      {/* Sidebar */}
-      <Sidebar visible={sidebarOpen} onClose={() => setSidebarOpen(false)} isDarkMode={isDarkMode} />
+    <View style={{ flex: 1, backgroundColor: isDarkMode ? "#010517ff" : "#fff" }}>
+      <Sidebar
+        visible={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        isDarkMode={isDarkMode}
+      />
 
-      {/* Header */}
       <Header
         title="Transactions"
         isDarkMode={isDarkMode}
@@ -91,52 +159,96 @@ export default function Transactions() {
       />
 
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Text style={[styles.pageSubtitle, { color: isDarkMode ? "#bfa98a" : "gray" }]}>
+        <Text
+          style={[
+            styles.pageSubtitle,
+            { color: isDarkMode ? "#bfa98a" : "gray" },
+          ]}
+        >
           Voici la liste de vos transactions récentes.
         </Text>
 
-        {/* CARDS */}
+        {/* 🔍 SEARCH */}
+        <TextInput
+          placeholder="Rechercher une transaction..."
+          placeholderTextColor="#999"
+          value={search}
+          onChangeText={setSearch}
+          style={[
+            styles.searchInput,
+            { backgroundColor: isDarkMode ? "#030e25ff" : "#f3f3f3" },
+          ]}
+        />
+        {/* STATS CARDS */}
         <View style={styles.cardsContainer}>
-          <View style={[styles.card, { backgroundColor: "#e8dcc7" }]}>
+          <View style={styles.card}>
             <Text style={styles.cardTitle}>
-              Total Transactions : <Text style={styles.cardValue}>{transactions.length}</Text>
+              Total Transactions :{" "}
+              <Text style={styles.cardValue}>{stats.totalTransactionsThisMonth}</Text>
             </Text>
             <Text style={styles.cardSubtitle}>Ce mois</Text>
           </View>
 
-          <View style={[styles.card, { backgroundColor: "#e8dcc7" }]}>
+          <View style={styles.card}>
             <Text style={styles.cardTitle}>
-              Total Revenus : <Text style={styles.revenue}>+{totalRevenus.toFixed(2)} €</Text>
+              Total Revenus :{" "}
+              <Text style={styles.revenue}>+{stats.revenueThisMonth.toFixed(2)} Fcfa</Text>
             </Text>
             <Text style={styles.cardSubtitle}>Ce mois</Text>
           </View>
 
-          <View style={[styles.card, { backgroundColor: "#e8dcc7" }]}>
+          <View style={styles.card}>
             <Text style={styles.cardTitle}>
-              Total Dépenses : <Text style={styles.expense}>{totalDepenses.toFixed(2)} €</Text>
+              Total Dépenses :{" "}
+              <Text style={styles.expense}>-{stats.expenseThisMonth.toFixed(2)} Fcfa</Text>
             </Text>
             <Text style={styles.cardSubtitle}>Ce mois</Text>
           </View>
         </View>
 
-        {/* LISTE */}
-        {!loading && (
-          <FlatList
-            data={transactions.slice(0, visibleCount)}
-            renderItem={renderItem}
-            keyExtractor={(item) => item._id || item.id}
-            scrollEnabled={false}
-          />
-        )}
+
+        {/* 🎛️ FILTER BUTTONS */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {[
+            { label: "Tous", value: "all" },
+            { label: "Dépôt", value: "depot" },
+            { label: "Retrait", value: "retrait" },
+            { label: "Interne", value: "internal_transfer" },
+            { label: "Externe", value: "external_transfer" },
+          ].map((f) => (
+            <TouchableOpacity
+              key={f.value}
+              style={[
+                styles.filterBtn,
+                filterType === f.value && styles.filterActive,
+              ]}
+              onPress={() => setFilterType(f.value)}
+            >
+              <Text style={styles.filterText}>{f.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* LIST */}
+        <FlatList
+          data={filteredTransactions.slice(0, visibleCount)}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          scrollEnabled={false}
+        />
 
         <TouchableOpacity
           style={styles.showMoreBtn}
           onPress={() => {
             setIsExpanded(!isExpanded);
-            setVisibleCount(isExpanded ? 3 : transactions.length);
+            setVisibleCount(
+              isExpanded ? 3 : filteredTransactions.length
+            );
           }}
         >
-          <Text style={styles.showMoreText}>{isExpanded ? "Masquer" : "Voir +"}</Text>
+          <Text style={styles.showMoreText}>
+            {isExpanded ? "Masquer" : "Voir +"}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -148,13 +260,35 @@ export default function Transactions() {
 /* -------- STYLES -------- */
 const styles = StyleSheet.create({
   pageSubtitle: { marginBottom: 20, paddingTop: 9, textAlign: "center" },
-  cardsContainer: { gap: 12, marginBottom: 20 },
-  card: { padding: 18, borderRadius: 14 },
+  cardsContainer: { gap: 8, marginBottom: 20 },
+  card: { padding: 15, borderRadius: 14, elevation: 2,borderColor:"#ffffffff",borderWidth:2, backgroundColor: "#e8dcc7",borderRadius: 12},
   cardTitle: { fontWeight: "bold" },
   cardValue: { color: "#2b5ce7" },
   revenue: { color: "green" },
   expense: { color: "red" },
   cardSubtitle: { color: "gray" },
+  pageSubtitle: { marginBottom: 16, textAlign: "center" },
+
+  searchInput: {
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 12,
+  },
+
+  filterBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    backgroundColor: "#e8dcc7",
+    borderRadius: 20,
+    marginRight: 8,
+  },
+  filterActive: {
+    backgroundColor: "#6b5a49",
+  },
+  filterText: {
+    fontWeight: "bold",
+    color: "#fff",
+  },
 
   transactionCard: {
     padding: 12,
@@ -166,8 +300,8 @@ const styles = StyleSheet.create({
   iconContainer: { padding: 10, borderRadius: 50 },
   transactionInfo: { flex: 1, marginLeft: 12 },
   transactionTitle: { fontWeight: "bold", fontSize: 15 },
-  statusBadge: { paddingHorizontal: 8, fontSize: 10 },
-  completed: { backgroundColor: "#d4f8d4", color: "#2e7d32" },
+  statusBadge: { fontSize: 10, marginLeft: 8 },
+  completed: { color: "#2e7d32" },
   transactionSubtitle: { marginTop: 4 },
   transactionAmount: { fontWeight: "bold", fontSize: 16 },
 
