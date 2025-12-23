@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Image } from "react-native";
-import * as ImagePicker from "expo-image-picker";
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
 
 // Components
 import Header from "./components/Header";
@@ -9,106 +8,26 @@ import Sidebar from "./components/Sidebar";
 
 // Theme Context
 import { useTheme } from "./context/ThemeContext";
-import { BackendContext } from "./context";
 
 export default function ProfilePage({ onNavigate, currentPage }) {
   const { colors, isDarkMode, toggleTheme } = useTheme();
-  const api = useContext(BackendContext);
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const [user, setUser] = useState({
-    prenom: "",
-    name: "",
-    email: "",
-    telephone: "",
-    avatar: null,
+    prenom: "Mouhamed",
+    nom: "Ndiaye",
+    email: "mouhamed22@gmail.com",
+    numero: "+221 78 182 52 22",
   });
+
   const [isEditing, setIsEditing] = useState(false);
 
-  // --------- Récupérer le profil depuis le backend ---------
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await api.get("/api/settings/me");
-        setUser(res.data);
-      } catch (err) {
-        console.log("Erreur profil :", err.response?.data || err.message);
-        Alert.alert("Erreur", "Impossible de récupérer le profil");
-      }
-    };
-
-    fetchProfile();
-  }, []);
-
-  // --------- Modification des champs ---------
   const handleChange = (key, value) => {
     setUser({ ...user, [key]: value });
   };
 
-  // --------- Sauvegarder les modifications ---------
-  const handleSave = async () => {
-    try {
-      const { prenom, name, email, telephone } = user;
-      const res = await api.put("/api/settings/update-profile", {
-        prenom,
-        name,
-        email,
-        telephone,
-      });
-      Alert.alert("Succès", "Profil mis à jour !");
-      setIsEditing(false);
-    } catch (err) {
-      console.log("Erreur update :", err.response?.data || err.message);
-      Alert.alert("Erreur", "Impossible de mettre à jour le profil");
-    }
-  };
-
-  // --------- Changer l'avatar ---------
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Permission refusée", "Vous devez autoriser l'accès à la galerie.");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-
-    if (!result.canceled) {
-      const uri = result.assets[0].uri;
-      uploadAvatar(uri);
-    }
-  };
-
-  const uploadAvatar = async (uri) => {
-    try {
-      const formData = new FormData();
-      formData.append("avatar", {
-        uri,
-        name: "avatar.jpg",
-        type: "image/jpeg",
-      });
-
-      const res = await api.put("/api/settings/update-avatar", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      Alert.alert("Succès", "Avatar mis à jour !");
-      setUser({ ...user, avatar: res.data.avatar }); // mettre à jour l'état local
-    } catch (err) {
-      console.log("Erreur avatar :", err.response?.data || err.message);
-      Alert.alert("Erreur", "Impossible de mettre à jour l'avatar");
-    }
-  };
-
   return (
-    <View style={{ flex: 1, backgroundColor: isDarkMode ? "#010517ff" : "#fff" }}>
+    <View style={{ flex: 1, backgroundColor: isDarkMode ? "#010517ff" : "#fff"}}>
       {/* SIDEBAR */}
       <Sidebar visible={sidebarOpen} 
               onClose={() => setSidebarOpen(false)}
@@ -116,7 +35,7 @@ export default function ProfilePage({ onNavigate, currentPage }) {
               onNavigate={onNavigate}
       />
 
-      {/* HEADER */}
+      {/* HEADER */} 
       <Header title="Mon Profil"
               isDarkMode={isDarkMode}
               onToggleTheme={toggleTheme}
@@ -132,21 +51,17 @@ export default function ProfilePage({ onNavigate, currentPage }) {
            }}>
 
           <View style={{ alignItems: "center" }}>
-            <TouchableOpacity onPress={pickImage}>
-              <View  style={{width: 90, height: 90, borderRadius: 50, backgroundColor: colors.primary || "#6b5a49", 
-                           justifyContent: "center", alignItems: "center", overflow:"hidden"}}>
-                {user.avatar ? (
-                  <Image source={{ uri: user.avatar }} style={{ width: 90, height: 90 }} />
-                ) : (
-                  <Text style={{ fontSize: 30, color: "#fff", fontWeight: "bold" }}>
-                    {user.prenom[0]}{user.name[0]}
-                  </Text>
-                )}
-              </View>
-            </TouchableOpacity>
+            <View  style={{width: 90, height: 90, borderRadius: 50, backgroundColor: colors.primary || "#6b5a49", 
+                           justifyContent: "center", alignItems: "center"}}>
+             
+              <Text style={{ fontSize: 30, color: "#fff", fontWeight: "bold" }}>
+                {user.prenom[0]}
+                {user.nom[0]}
+              </Text>
+            </View>
 
             <Text style={{ marginTop: 12, fontSize: 18, fontWeight: "600", color: colors.text }}>
-              {user.prenom} {user.name}
+              {user.prenom} {user.nom}
             </Text>
 
             <Text style={{ color: colors.soft, marginBottom: 10 }}>Client Premium</Text>
@@ -175,26 +90,42 @@ export default function ProfilePage({ onNavigate, currentPage }) {
                : {backgroundColor:"#030e25ff", shadowColor: "transparent", shadowOpacity: 0, elevation: 0, borderLeft:"4px solid #e8dcc7"}), 
             }}>
 
-          <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 10, color: colors.text }}>
+          <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 10, color: colors.text,}}>
             Informations personnelles
           </Text>
 
           {!isEditing ? (
             <>
               <InfoLine label="Prénom" value={user.prenom} colors={colors} />
-              <InfoLine label="Nom" value={user.name} colors={colors} />
+              <InfoLine label="Nom" value={user.nom} colors={colors} />
               <InfoLine label="Email" value={user.email} colors={colors} />
-              <InfoLine label="Téléphone" value={user.telephone} colors={colors} />
+              <InfoLine label="Téléphone" value={user.numero} colors={colors} />
             </>
           ) : (
             <>
-              <EditInput value={user.prenom} colors={colors} onChange={(v) => handleChange("prenom", v)} />
-              <EditInput value={user.name} colors={colors} onChange={(v) => handleChange("nom", v)} />
-              <EditInput value={user.email} colors={colors} onChange={(v) => handleChange("email", v)} />
-              <EditInput value={user.telephone} colors={colors} onChange={(v) => handleChange("numero", v)} />
+              <EditInput value={user.prenom}
+                         colors={colors}
+                         onChange={(v) => handleChange("prenom", v)}
+              />
+              <EditInput value={user.nom}
+                         colors={colors}
+                         onChange={(v) => handleChange("nom", v)}
+              />
+              <EditInput value={user.email}               
+                         colors={colors}
+                         onChange={(v) => handleChange("email", v)}
+              />
+              <EditInput value={user.numero}             
+                         colors={colors}
+                         onChange={(v) => handleChange("numero", v)}
+              />
 
-              <TouchableOpacity onPress={handleSave} style={{backgroundColor: colors.primary || "#6b5a49", padding: 12, borderRadius: 12, marginTop: 10 }}>
-                <Text style={{ textAlign: "center", color: "#fff", fontWeight: "600" }}>Sauvegarder</Text>
+              <TouchableOpacity onPress={() => setIsEditing(false)}               
+                style={{backgroundColor: colors.primary || "#6b5a49", padding: 12, borderRadius: 12, marginTop: 10, }}>
+
+                <Text style={{ textAlign: "center", color: "#fff", fontWeight: "600", }}>
+                  Sauvegarder
+                </Text>
               </TouchableOpacity>
             </>
           )}
@@ -210,6 +141,7 @@ export default function ProfilePage({ onNavigate, currentPage }) {
 /* -------------------------------------------
    UI COMPONENTS
 -------------------------------------------- */
+
 const InfoLine = ({ label, value, colors }) => (
   <View style={{ paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border }}>
     <Text style={{ color: colors.soft, fontSize: 13 }}>{label}</Text>
@@ -222,6 +154,12 @@ const EditInput = ({ value, onChange, colors }) => (
     value={value}
     onChangeText={onChange}
     style={{ backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border, padding: 12,
-             borderRadius: 10, marginTop: 10, color: colors.text }}
-  />
+             borderRadius: 10, marginTop: 10, color: colors.text,}}
+        
+   />   
+
+      
+      
+    
+  
 );

@@ -4,9 +4,9 @@ import { LineChart, BarChart } from "react-native-chart-kit";
 import Header from "../components/Header";
 import MobileNav from "../components/MobileNav";
 import Sidebar from "../components/Sidebar";
+import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../context/ThemeContext";
-import { BackendContext } from "../context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { FontAwesome } from "@expo/vector-icons";
 
 const screenWidth = Dimensions.get("window").width - 32;
 
@@ -15,61 +15,16 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [showTotal, setShowTotal] = useState(true);
-  const [dashboard, setDashboard] = useState(null);
-  const router = useRouter();
-  const api = useContext(BackendContext);
 
-  // Vérifier token au montage
-  useEffect(() => {
-    const checkToken = async () => {
-      const token = await AsyncStorage.getItem("token");
-      if (!token) {
-        router.replace("/login"); // redirection si pas connecté
-      }
-    };
-    checkToken();
-  }, []);
-
-  // Charger les données du dashboard
-  const fetchDashboard = async () => {
-    if (!api) return;
-    try {
-      const res = await api.get("/api/dashboard/summary");
-      setDashboard(res.data);
-    } catch (err) {
-      console.error("Erreur dashboard:", err);
-
-      if (err.response?.status === 401) {
-        // Token expiré ou invalide → redirection login
-        await AsyncStorage.removeItem("token");
-        await AsyncStorage.removeItem("user");
-        Alert.alert("Session expirée", "Veuillez vous reconnecter.");
-        router.replace("/login");
-      } else {
-        Alert.alert("Erreur", err.response?.data?.message || "Impossible de charger le dashboard");
-      }
-    }
-  };
-
-  useEffect(() => {
-    fetchDashboard();
-  }, [api]);
-
-  if (!dashboard) {
-    return (
-      <View style={[styles.container, { justifyContent: "center", alignItems: "center", backgroundColor: isDarkMode ? "#141829" : "#f7f5f2" }]}>
-        <Text style={{ color: isDarkMode ? "#f3e8d7" : "#3b322a" }}>Chargement...</Text>
-      </View>
-    );
-  }
-
-  const { totalBalance, mainAccount, revenueThisMonth, expenseThisMonth, transactionsCount } = dashboard;
+  // Données Exemple
+  const revenue = [5000, 6000, 5500, 7000, 6500, 7200];
+  const expenses = [3000, 2500, 4000, 3500, 3800, 3200];
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
 
   // Sommes
   const totalRevenue = revenue.reduce((a, b) => a + b, 0);
   const totalExpenses = expenses.reduce((a, b) => a + b, 0);
-  // const totalBalance = totalRevenue - totalExpenses;
+  const totalBalance = totalRevenue - totalExpenses;
 
   // ----------- États Carte Bancaire ---------------
   const [showCardNumber, setShowCardNumber] = useState(false);
@@ -102,8 +57,6 @@ export default function Home() {
 
   const isBack = currentValue >= 90;
 
-  const onNavigate = (page) => router.push(`/home/${page}`);
-
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? "#010517ff" : "#f7f5f2" }]}>
       <Sidebar
@@ -127,29 +80,133 @@ export default function Home() {
           Voici un aperçu de votre tableau de bord.
         </Text>
 
+        {/* CARTE SOLDE TOTAL */}
         <TouchableOpacity
           onPress={() => setShowTotal(!showTotal)}
-          style={[styles.card, { backgroundColor: isDarkMode ? "#1a2742" : "#d6c7b4" }]}
-        >
-          <Text style={{ fontSize: 18, color: "#fff" }}>Solde Total</Text>
-          <Text style={{ fontSize: 28, fontWeight: "700", color: "#fff" }}>
-            {showTotal ? `${totalBalance.toLocaleString()} Fcfa` : "****"}
+          style={[styles.card, { backgroundColor: isDarkMode ? "#081838ff" : "#e8dcc7", borderLeft:"4px solid #5b4636",
+            ...(!isDarkMode 
+             ? {shadowColor: "#a8a8a8ff", shadowOffset: { width: 10, height: 10 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 10}
+             : {shadowColor: "transparent", shadowOpacity: 0, elevation: 0, borderLeftColor:"#e8dcc7",}), 
+            }]}>  
+
+       
+          <Text style={{...(!isDarkMode 
+                ? {fontSize: 18, color: "#5b4636",}
+                : {fontSize: 18, color:"#e8dcc7"}), }}>
+            Solde Total
+          </Text>
+          <Text style={{ ...(!isDarkMode 
+                ? {fontSize: 28, fontWeight: "bold", color: "#5b4636" }
+                : {fontSize: 28, fontWeight: "bold", color:"#e8dcc7"}), }}>
+            {showTotal ? `${totalBalance.toLocaleString()} FCFA` : "****"}
           </Text>
         </TouchableOpacity>
 
+        {/* PETITES CARTES */}
         <View style={styles.cardsRow}>
           <View style={[styles.smallCard, { backgroundColor: "#f87171" }]}>
             <Text style={styles.cardLabel}>Dépenses</Text>
-            <Text style={styles.cardValue}>-{expenseThisMonth.toLocaleString()} Fcfa</Text>
+            <Text style={styles.cardValue}>-{totalExpenses.toLocaleString()} FCFA</Text>
           </View>
 
           <View style={[styles.smallCard, { backgroundColor: "#4ade80" }]}>
             <Text style={styles.cardLabel}>Revenus</Text>
-            <Text style={styles.cardValue}>+{revenueThisMonth.toLocaleString()} Fcfa</Text>
+            <Text style={styles.cardValue}>+{totalRevenue.toLocaleString()} FCFA</Text>
           </View>
         </View>
 
-        <Text style={[styles.chartTitle, { color: isDarkMode ? "#f3e8d7" : "#3b322a" }]}>Revenus vs Dépenses</Text>
+        {/* ---------------- CARTE BANCAIRE -------------------- */}
+        <View style={{ marginTop: 30 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <Text style={{ fontSize: 20, fontWeight: "700", color: isDarkMode ? "#fff" : "#000" }}>
+              Carte Bancaire
+            </Text>
+
+            <TouchableOpacity
+              onPress={flipCard}
+              style={{ backgroundColor: "#4a5568", paddingVertical: 6, paddingHorizontal: 15, borderRadius: 10 }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "700" }}>Voir +</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ height: 200, marginTop: 10 }}>
+
+            {/* RECTO */}
+            <Animated.View
+              style={{
+                position: isBack ? "absolute" : "relative",
+                width: "100%",
+                backfaceVisibility: "hidden",
+                transform: [{ rotateY: frontInterpolate }],
+              }}
+            >
+              <LinearGradient
+                colors={isDarkMode ? ["#342b20", "#a28870"] : ["#432703", "#a28870"]}
+                style={styles.bankCard}
+              >
+                {/* Numéro */}
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Text style={styles.cardNumber}>
+                    {showCardNumber ? "1234 5678 9012 3456" : "**** **** **** 9876"}
+                  </Text>
+                  <TouchableOpacity onPress={() => setShowCardNumber(!showCardNumber)} style={{ marginLeft: 10 }}>
+                    <FontAwesome name={showCardNumber ? "eye" : "eye-slash"} size={22} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Titulaire + Solde */}
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 25 }}>
+                  <View>
+                    <Text style={styles.cardLabel}>Titulaire</Text>
+                    <Text style={styles.cardHolder}>Mouhamed Ndiaye</Text>
+                  </View>
+
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Text style={[styles.cardHolder, { fontSize: 18, marginRight: 10 }]}>
+                      {showCardSolde ? "245 000 FCFA" : "****"}
+                    </Text>
+
+                    <TouchableOpacity onPress={() => setShowCardSolde(!showCardSolde)}>
+                      <FontAwesome name={showCardSolde ? "eye" : "eye-slash"} size={22} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <Text style={[styles.cardLabel, { marginTop: 20 }]}>BankApp</Text>
+              </LinearGradient>
+            </Animated.View>
+
+            {/* VERSO */}
+            <Animated.View
+              style={{
+                position: isBack ? "relative" : "absolute",
+                top: 0,
+                width: "100%",
+                backfaceVisibility: "hidden",
+                transform: [{ rotateY: backInterpolate }],
+              }}
+            >
+              <LinearGradient
+                colors={isDarkMode ? ["#342b20", "#a28870"] : ["#d6c7b4", "#a28870"]}
+                style={styles.bankCard}
+              >
+                <View style={styles.blackStripe}></View>
+
+                <View style={{ alignSelf: "flex-end", marginRight: 20 }}>
+                  <Text style={styles.cardLabel}>CVV</Text>
+                  <Text style={styles.cardHolder}>123</Text>
+                </View>
+              </LinearGradient>
+            </Animated.View>
+          </View>
+        </View>
+
+        {/* ------------------- GRAPHIQUES -------------------- */}
+        <Text style={[styles.chartTitle, { color: isDarkMode ? "#fff" : "#000" }]}>
+          Revenus vs Dépenses
+        </Text>
+
         <BarChart
           data={{
             labels: months,
@@ -173,7 +230,10 @@ export default function Home() {
           style={{ marginVertical: 10, borderRadius: 16 }}
         />
 
-        <Text style={[styles.chartTitle, { color: isDarkMode ? "#f3e8d7" : "#3b322a" }]}>Évolution du solde</Text>
+        <Text style={[styles.chartTitle, { color: isDarkMode ? "#fff" : "#000" }]}>
+          Évolution du solde
+        </Text>
+
         <LineChart
           data={{
             labels: months,

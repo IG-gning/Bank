@@ -19,8 +19,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.BankRewmi"
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
@@ -44,12 +43,6 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "2b39824c-f3d9-4421-b246-9bb1ee118f49"
-      }
     }
   }
 }

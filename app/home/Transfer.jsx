@@ -1,128 +1,93 @@
-import React, { useEffect, useState, useContext } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  TextInput,
   Alert,
 } from "react-native";
+
 import Header from "../components/Header";
 import MobileNav from "../components/MobileNav";
 import Sidebar from "../components/Sidebar";
 import { useTheme } from "../context/ThemeContext";
-import { BackendContext } from "../context";
+import { makeInternalTransfer, makeExternalTransfer } from "../context";
 
 export default function Transfer() {
+  const [activeTab, setActiveTab] = useState("interne");
   const { isDarkMode, toggleTheme } = useTheme();
-  const api = useContext(BackendContext);
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [tab, setTab] = useState("interne");
 
-  const [accounts, setAccounts] = useState([]);
-  const [sourceAccount, setSourceAccount] = useState(null);
-  const [destinationAccount, setDestinationAccount] = useState(null);
-  const [beneficiaryIban, setBeneficiaryIban] = useState("");
-  const [amount, setAmount] = useState("");
-
-  const [openSourceDropdown, setOpenSourceDropdown] = useState(false);
-  const [openDestDropdown, setOpenDestDropdown] = useState(false);
-
-  useEffect(() => {
-    loadAccounts();
-  }, []);
-
-  const loadAccounts = async () => {
-    try {
-      const res = await api.get("/api/accounts");
-      setAccounts(res.data);
-    } catch (e) {
-      Alert.alert("Erreur", "Impossible de charger les comptes");
-    }
-  };
+  const [form, setForm] = useState({
+    sourceAccount: "",
+    destinationAccount: "",
+    beneficiaryIban: "",
+    amount: "",
+    description: "",
+  });
 
   const handleTransfer = async () => {
     try {
-      if (!sourceAccount || !amount) {
-        return Alert.alert("Erreur", "Tous les champs sont requis");
+      if (!form.sourceAccount || !form.amount) {
+        return Alert.alert("Erreur", "Veuillez remplir les champs obligatoires");
       }
 
-      if (tab === "interne") {
-        if (!destinationAccount) {
-          return Alert.alert("Erreur", "Compte destination requis");
-        }
-
-        await api.post("/api/transfer/internal", {
-          sourceAccount,
-          destinationAccount,
-          amount: Number(amount),
+      if (activeTab === "interne") {
+        await makeInternalTransfer({
+          sourceAccount: form.sourceAccount,
+          destinationAccount: form.destinationAccount,
+          amount: Number(form.amount),
+          description: form.description,
         });
       } else {
-        if (!beneficiaryIban) {
-          return Alert.alert("Erreur", "IBAN requis");
-        }
-
-        await api.post("/api/transfer/external", {
-          sourceAccount,
-          beneficiaryIban,
-          amount: Number(amount),
+        await makeExternalTransfer({
+          sourceAccount: form.sourceAccount,
+          beneficiaryIban: form.beneficiaryIban,
+          amount: Number(form.amount),
+          description: form.description,
         });
       }
 
-      Alert.alert("Succès", "Transfert effectué avec succès");
-      setAmount("");
-      setDestinationAccount(null);
-      setBeneficiaryIban("");
+      Alert.alert("Succès", "Transfert effectué avec succès !");
     } catch (err) {
-      console.log("TRANSFER ERROR", err.response?.data || err.message);
       Alert.alert(
         "Erreur",
-        err.response?.data?.message || "Échec du transfert"
+        err.response?.data?.message || "Impossible d'effectuer le transfert"
       );
     }
   };
 
-  const renderAccountDropdown = (selected, setSelected, open, setOpen) => (
-    <View style={{ marginTop: 10, zIndex: 10 }}>
-      <TouchableOpacity
-        style={[styles.input, { justifyContent: "center" }]}
-        onPress={() => setOpen(!open)}
-      >
-        <Text style={{ color: selected ? (isDarkMode ? "#fff" : "#000") : "#888" }}>
-          {selected
-            ? accounts.find((a) => a._id === selected)?.type.toUpperCase() +
-              " • " +
-              accounts.find((a) => a._id === selected)?.balance +
-              " €"
-            : "Sélectionner un compte"}
-        </Text>
-      </TouchableOpacity>
+  const internalFields = [
+    { label: "Compte source", key: "sourceAccount", placeholder: "Compte Courant - 24 580,45 €" },
+    { label: "Compte destination", key: "destinationAccount", placeholder: "Sélectionnez un compte" },
+    { label: "Montant (€)", key: "amount", placeholder: "0.00", keyboard: "numeric" },
+    { label: "Description (optionnel)", key: "description", placeholder: "Ex: Épargne mensuelle" },
+  ];
 
-      {open && (
-        <View style={[styles.dropdown, { backgroundColor: isDarkMode ? "#030e25" : "#fff" }]}>
-          {accounts.map((item) => (
-            <TouchableOpacity
-              key={item._id}
-              style={styles.item}
-              onPress={() => {
-                setSelected(item._id);
-                setOpen(false);
-              }}
-            >
-              <Text style={{ color: isDarkMode ? "#fff" : "#000" }}>
-                {item.type.toUpperCase()} • {item.balance} €
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-    </View>
-  );
+  const externalFields = [
+    { label: "Compte source", key: "sourceAccount", placeholder: "Compte Courant - 24 580,45 €" },
+    { label: "IBAN", key: "beneficiaryIban", placeholder: "SN 76 XXXXXXXXXXXXXXXXXXXXXXXX" },
+    { label: "Montant (€)", key: "amount", placeholder: "0.00", keyboard: "numeric" },
+    { label: "Description (optionnel)", key: "description", placeholder: "Ex: Épargne mensuelle" },
+  ];
+
+  const contacts = [
+    { name: "Marie Dubois", email: "marie@email.com", emoji: "🙍🏾‍♀️​", bg: "#e8dcc7" },
+    { name: "Pierre Martin", email: "pierre@email.com", emoji: "🙍🏽", bg: "#e8dcc7" },
+    { name: "Sophie Bernard", email: "sophie@email.com", emoji: "🙍🏾‍♀️​", bg: "#e8dcc7" },
+    { name: "Luc Mercier", email: "luc@email.com", emoji: "🙍🏽", bg: "#e8dcc7" },
+  ];
+
+  const infos = [
+    { title: "Les transferts internes sont instantanés.", sub: "Entre vos comptes BankApp" },
+    { title: "Gérez facilement vos portefeuilles.", sub: "Toutes vos cartes BankApp" },
+    { title: "Vos paiements sont sécurisés.", sub: "Protection bancaire avancée" },
+  ];
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDarkMode ? "#010517" : "#f1f5f9" }}>
+    <View style={{ flex: 1, backgroundColor: isDarkMode ? "#141829" : "#f1f5f9" }}>
       <Sidebar visible={sidebarOpen} onClose={() => setSidebarOpen(false)} isDarkMode={isDarkMode} />
 
       <Header
@@ -132,57 +97,108 @@ export default function Transfer() {
         onMenuPress={() => setSidebarOpen(true)}
       />
 
-      <ScrollView contentContainerStyle={styles.container}>
-        {/* Tabs */}
-        <View style={styles.tabs}>
-          <TouchableOpacity
-            style={[styles.tabBtn, tab === "interne" && styles.activeTab]}
-            onPress={() => setTab("interne")}
-          >
-            <Text style={styles.tabText}>Interne</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tabBtn, tab === "externe" && styles.activeTab]}
-            onPress={() => setTab("externe")}
-          >
-            <Text style={styles.tabText}>Externe</Text>
-          </TouchableOpacity>
+      <ScrollView contentContainerStyle={{ padding: 20 }}>
+        <View style={styles.header}>
+          <Text style={[styles.subtitle, { color: isDarkMode ? "#f3e8d7" : "#555" }]}>
+            Envoyez de l'argent à vos proches ou payez vos factures
+          </Text>
         </View>
 
-        {/* Card */}
-        <View style={[styles.card, { backgroundColor: isDarkMode ? "#030e25" : "#ffffff" }]}>
-          <Text style={styles.label}>Compte source</Text>
-          {renderAccountDropdown(sourceAccount, setSourceAccount, openSourceDropdown, setOpenSourceDropdown)}
+        <View style={{ gap: 20 }}>
+          <View style={[styles.formCard, { backgroundColor: isDarkMode ? "#1a2742" : "white" }]}>
+            <View style={[styles.tabsWrapper, { backgroundColor: "#e8dcc7" }]}>
+              {["interne", "externe"].map((tab) => (
+                <TouchableOpacity
+                  key={tab}
+                  onPress={() => setActiveTab(tab)}
+                  style={[styles.tabButton, activeTab === tab && styles.activeTab]}
+                >
+                  <Text style={styles.tabText}>
+                    {tab === "interne" ? "Transfert interne" : "Transfert externe"}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
-          {tab === "interne" ? (
-            <>
-              <Text style={styles.label}>Compte destination</Text>
-              {renderAccountDropdown(destinationAccount, setDestinationAccount, openDestDropdown, setOpenDestDropdown)}
-            </>
-          ) : (
-            <>
-              <Text style={styles.label}>IBAN bénéficiaire</Text>
-              <TextInput
-                value={beneficiaryIban}
-                onChangeText={setBeneficiaryIban}
-                placeholder="IBANXXXXXXXX"
-                style={styles.input}
-              />
-            </>
-          )}
+            <View>
+              <Text style={[styles.formTitle, { color: isDarkMode ? "#f3e8d7" : "#000" }]}>
+                {activeTab === "interne" ? "Transfert entre vos comptes" : "Transfert externe"}
+              </Text>
 
-          <Text style={styles.label}>Montant</Text>
-          <TextInput
-            value={amount}
-            onChangeText={setAmount}
-            keyboardType="numeric"
-            placeholder="0"
-            style={styles.input}
-          />
+              <Text style={[styles.formSubtitle, { color: isDarkMode ? "#bfa98a" : "#888" }]}>
+                {activeTab === "interne"
+                  ? "Sélectionnez les comptes"
+                  : "Transférez vers un autre compte bancaire"}
+              </Text>
 
-          <TouchableOpacity style={styles.submitBtn} onPress={handleTransfer}>
-            <Text style={styles.submitText}>Envoyer</Text>
-          </TouchableOpacity>
+              {(activeTab === "interne" ? internalFields : externalFields).map((field, index) => (
+                <View key={index} style={styles.field}>
+                  <Text style={[styles.label, { color: isDarkMode ? "#f3e8d7" : "#000" }]}>
+                    {field.label}
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: isDarkMode ? "#24305e" : "#f7f4efff",
+                        color: isDarkMode ? "#fff" : "#000",
+                      },
+                    ]}
+                    placeholder={field.placeholder}
+                    placeholderTextColor={isDarkMode ? "#ccc" : "#888"}
+                    keyboardType={field.keyboard || "default"}
+                    value={form[field.key]}
+                    onChangeText={(text) =>
+                      setForm({ ...form, [field.key]: text })
+                    }
+                  />
+                </View>
+              ))}
+
+              <TouchableOpacity style={styles.sendBtn} onPress={handleTransfer}>
+                <Text style={styles.sendText}>Envoyer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={{ gap: 20 }}>
+            <View style={[styles.sidebarCard, { backgroundColor: isDarkMode ? "#1a2742" : "white" }]}>
+              <Text style={[styles.sidebarTitle, { color: isDarkMode ? "#f3e8d7" : "#000" }]}>
+                Contacts récents
+              </Text>
+
+              {contacts.map((c, i) => (
+                <View key={i} style={styles.contactItem}>
+                  <View style={[styles.contactIcon, { backgroundColor: c.bg }]}>
+                    <Text style={styles.contactEmoji}>{c.emoji}</Text>
+                  </View>
+                  <Text style={{ color: isDarkMode ? "#f3e8d7" : "#000" }}>
+                    {c.name} - {c.email}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={[styles.sidebarCard, { backgroundColor: isDarkMode ? "#1a2742" : "white" }]}>
+              <Text style={[styles.sidebarTitle, { color: isDarkMode ? "#f3e8d7" : "#000" }]}>
+                Informations utiles
+              </Text>
+
+              {infos.map((info, i) => (
+                <View key={i} style={styles.infoItem}>
+                  <View style={styles.infoBullet} />
+                  <View>
+                    <Text style={[styles.infoTitle, { color: isDarkMode ? "#f3e8d7" : "#000" }]}>
+                      {info.title}
+                    </Text>
+                    <Text style={[styles.infoSub, { color: isDarkMode ? "#bfa98a" : "#666" }]}>
+                      {info.sub}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
         </View>
       </ScrollView>
 
@@ -191,45 +207,29 @@ export default function Transfer() {
   );
 }
 
+/* ==================== STYLES ==================== */
 const styles = StyleSheet.create({
-  container: { padding: 20 },
-  tabs: { flexDirection: "row", marginBottom: 20 },
-  tabBtn: {
-    flex: 1,
-    padding: 14,
-    backgroundColor: "#e8dcc7",
-    alignItems: "center",
-    borderRadius: 10,
-    marginHorizontal: 4,
-  },
-  activeTab: { backgroundColor: "#ffffff" },
-  tabText: { fontWeight: "700" },
-  card: { padding: 18, borderRadius: 16 },
-  label: { marginTop: 14, fontWeight: "600" },
-  input: {
-    backgroundColor: "#f7f4ef",
-    borderRadius: 10,
-    padding: 14,
-    marginTop: 6,
-  },
-  submitBtn: {
-    marginTop: 24,
-    backgroundColor: "#e8dcc7",
-    padding: 16,
-    borderRadius: 14,
-    alignItems: "center",
-  },
-  submitText: { fontWeight: "800", fontSize: 16 },
-  dropdown: {
-    marginTop: 4,
-    borderRadius: 10,
-    maxHeight: 200,
-    borderWidth: 1,
-    borderColor: "#ccc",
-  },
-  item: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-  },
+  header: { marginBottom: 30, alignItems: "center" },
+  subtitle: { fontSize: 16, marginTop: 4 },
+  formCard: { padding: 20, borderRadius: 16, shadowColor: "#aaa", shadowOpacity: 0.2, shadowRadius: 6 },
+  tabsWrapper: { flexDirection: "row", borderRadius: 12, padding: 4, marginBottom: 20 },
+  tabButton: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: 10 },
+  activeTab: { backgroundColor: "#fff" },
+  tabText: { fontWeight: "600" },
+  formTitle: { fontSize: 20, fontWeight: "700", marginBottom: 4 },
+  formSubtitle: { fontSize: 12, marginBottom: 20 },
+  field: { marginBottom: 15 },
+  label: { fontWeight: "600", marginBottom: 6 },
+  input: { padding: 12, borderRadius: 10, borderWidth: 1, borderColor: "#ccc" },
+  sendBtn: { marginTop: 10, backgroundColor: "#e8dcc7", padding: 12, borderRadius: 10, alignItems: "center" },
+  sendText: { color: "black", fontSize: 16, fontWeight: "600" },
+  sidebarCard: { padding: 16, borderRadius: 14, shadowColor: "#aaa", shadowOpacity: 0.2, shadowRadius: 6 },
+  sidebarTitle: { fontSize: 18, fontWeight: "700", marginBottom: 10 },
+  contactItem: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
+  contactIcon: { width: 36, height: 36, borderRadius: 50, alignItems: "center", justifyContent: "center" },
+  contactEmoji: { fontSize: 18 },
+  infoItem: { flexDirection: "row", gap: 12, marginBottom: 12 },
+  infoBullet: { width: 10, height: 10, backgroundColor: "#6b5a49", borderRadius: 10, marginTop: 6 },
+  infoTitle: { fontSize: 14, fontWeight: "600" },
+  infoSub: { fontSize: 12 },
 });
