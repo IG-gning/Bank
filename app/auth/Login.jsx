@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { BackendContext } from "../context"; // <-- BackendContext pour axios
+import { BackendContext } from "../context";
 
 const { width, height } = Dimensions.get("window");
 
@@ -18,7 +18,7 @@ export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Champs
+  // Champs utilisateur
   const [prenom, setPrenom] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -26,62 +26,123 @@ export default function Login() {
   const [telephone, setTelephone] = useState("");
   const [dateDeNaissance, setDateDeNaissance] = useState("");
 
+  // Validation email/code
+  const [unconfirmedUser, setUnconfirmedUser] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const [code, setCode] = useState("");
+
+  const [loading, setLoading] = useState(false);
+
   const router = useRouter();
-  const api = useContext(BackendContext); // <-- axios instance
-  
- const handleSubmit = async () => {
-  try {
-    if (isSignUp) {
-      // ✅ VALIDATION FRONT
-      if (
-        !name.trim() ||
-        !prenom.trim() ||
-        !email.trim() ||
-        !password.trim() ||
-        !telephone.trim() ||
-        !dateDeNaissance.trim()
-      ) {
-        return Alert.alert("Erreur", "Veuillez remplir tous les champs");
+  const api = useContext(BackendContext);
+
+  // =======================
+  // Fonction login / inscription
+  // =======================
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      if (isSignUp) {
+        if (
+          !name.trim() ||
+          !prenom.trim() ||
+          !email.trim() ||
+          !password.trim() ||
+          !telephone.trim() ||
+          !dateDeNaissance.trim()
+        ) {
+          return Alert.alert("Erreur", "Veuillez remplir tous les champs");
+        }
+
+        const res = await api.post("/api/auth/register", {
+          name,
+          prenom,
+          email,
+          password,
+          telephone,
+          dateDeNaissance,
+        });
+
+        Alert.alert("Succès", res.data.message);
+        router.push("/home");
+      } else {
+        if (!email.trim() || !password.trim()) {
+          return Alert.alert("Erreur", "Email et mot de passe requis");
+        }
+
+        const res = await api.post("/api/auth/login", { email, password });
+
+        // Si compte non confirmé (2FA)
+        if (res.data && res.data.userId) {
+          setUserId(res.data.userId);
+          setUnconfirmedUser(true);
+          Alert.alert(
+            "Confirmation requise",
+            res.data.message ||
+              "Un mail de confirmation a été envoyé. Entrez le code reçu ci-dessous."
+          );
+        }
+        // Si compte confirmé
+        else if (res.data && res.data.token) {
+          await AsyncStorage.setItem("token", res.data.token);
+          Alert.alert("Succès", res.data.message);
+          router.push("/home");
+        }
       }
-
-      const res = await api.post("/api/auth/register", {
-        name,
-        prenom,
-        email,
-        password,
-        telephone,
-        dateDeNaissance,
-      });
-
-      Alert.alert("Succès", res.data.message);
-      router.push("/home");
-
-    } else {
-      // LOGIN
-      if (!email.trim() || !password.trim()) {
-        return Alert.alert("Erreur", "Email et mot de passe requis");
-      }
-
-      const res = await api.post("/api/auth/login", {
-        email,
-        password,
-      });
-
-      await AsyncStorage.setItem("token", res.data.token);
-      Alert.alert("Succès", res.data.message);
-      router.push("/home");
+    } catch (err) {
+      console.error("LOGIN ERROR DETAIL:", err.response || err.message);
+      Alert.alert("Erreur", err.response?.data?.message || "Erreur serveur");
+    } finally {
+      setLoading(false);
     }
+  };
 
-  } catch (err) {
-    console.error("LOGIN ERROR :", err.response?.data || err.message);
-    Alert.alert(
-      "Erreur",
-      err.response?.data?.message || "Impossible de se connecter"
-    );
-  }
-};
+  // =======================
+  // Validation code 2FA
+  // =======================
+  const handleValidateCode = async () => {
+    if (!code.trim()) return Alert.alert("Erreur", "Veuillez entrer le code");
 
+    try {
+      const res = await api.post("/api/auth/verify-email-2fa", {
+        userId,
+        code,
+      });
 
+      if (res.data && res.data.token) {
+        await AsyncStorage.setItem("token", res.data.token);
+        Alert.alert("Succès", "Compte validé !");
+        router.push("/home");
+      }
+    } catch (err) {
+      console.error("CODE VALIDATION ERROR:", err.response || err.message);
+      Alert.alert(
+        "Erreur",
+        err.response?.data?.message || "Code invalide ou erreur serveur"
+      );
+    }
+  };
+
+  // =======================
+  // Renvoyer le code
+  // =======================
+  const handleResend = async () => {
+    if (!userId) return;
+    try {
+      const res = await api.post("/api/auth/resend-code", { userId });
+      Alert.alert("Succès", res.data.message || "Email de confirmation renvoyé !");
+    } catch (err) {
+      console.error("RESEND EMAIL ERROR:", err.response || err.message);
+      Alert.alert(
+        "Erreur",
+        err.response?.data?.message || "Impossible de renvoyer le mail"
+      );
+    }
+  };
+
+  // =======================
+  // Render
+  // =======================
   return (
     <View style={styles.container}>
       <View style={styles.bubbleTop} />
@@ -89,7 +150,15 @@ export default function Login() {
       <View style={styles.headerSpace} />
 
       <View style={styles.formCard}>
-        {!isSignUp && (
+        {loading && (
+          <Text
+            style={{ color: "#f3e8d7", textAlign: "center", marginBottom: 10 }}
+          >
+            Traitement en cours...
+          </Text>
+        )}
+
+        {!isSignUp && !unconfirmedUser && (
           <>
             <Text style={styles.formTitle}>Bienvenue</Text>
             <Text style={styles.formSubtitle}>
@@ -97,7 +166,14 @@ export default function Login() {
             </Text>
           </>
         )}
+
         {isSignUp && <Text style={styles.formTitle}>Créer un compte</Text>}
+
+        {unconfirmedUser && (
+          <Text style={styles.formSubtitle}>
+            Votre compte n'est pas encore confirmé. Entrez le code reçu par mail.
+          </Text>
+        )}
 
         {isSignUp && (
           <View style={styles.row}>
@@ -148,31 +224,42 @@ export default function Login() {
             </TouchableOpacity>
           </View>
         </View>
-        {!isSignUp && (
-  <TouchableOpacity
-    onPress={async () => {
-      if (!email) {
-        return Alert.alert("Erreur", "Entrez votre email");
-      }
 
-      try {
-        const res = await api.post("/api/auth/forgot-password", { email });
-        Alert.alert("Succès", res.data.message);
-      } catch (err) {
-        Alert.alert(
-          "Erreur",
-          err.response?.data?.message || "Erreur serveur"
-        );
-      }
-    }}
-  >
-    <Text style={{ color: "#bfa98a", marginBottom: 15, textAlign: "right" }}>
-      Mot de passe oublié ?
-    </Text>
-  </TouchableOpacity>
-)}
+        {/* Champ code 2FA */}
+        {unconfirmedUser && (
+          <>
+            <View style={styles.field}>
+              <Text style={styles.label}>Code de validation</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Entrez le code"
+                value={code}
+                onChangeText={setCode}
+                keyboardType="numeric"
+              />
+            </View>
+            <TouchableOpacity style={styles.submitBtn} onPress={handleValidateCode}>
+              <Text style={styles.submitText}>Valider le code</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleResend}
+              style={{ marginTop: 10, alignSelf: "center" }}
+            >
+              <Text style={{ color: "#bfa98a", fontWeight: "700" }}>
+                Renvoyer le mail
+              </Text>
+            </TouchableOpacity>
+          </>
+        )}
 
-
+        {/* Bouton login / inscription */}
+        {!unconfirmedUser && (
+          <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
+            <Text style={styles.submitText}>
+              {isSignUp ? "Créer mon compte" : "Se connecter"}
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {isSignUp && (
           <>
@@ -197,12 +284,6 @@ export default function Login() {
           </>
         )}
 
-        <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
-          <Text style={styles.submitText}>
-            {isSignUp ? "Créer mon compte" : "Se connecter"}
-          </Text>
-        </TouchableOpacity>
-
         <View style={styles.toggleContainer}>
           <Text style={styles.toggleText}>
             {isSignUp
@@ -220,9 +301,7 @@ export default function Login() {
   );
 }
 
-// Styles identiques à ton code existant
-
-
+// Styles inchangés
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0f1320", justifyContent: "center", alignItems: "center" },
   headerSpace: { height: 60 },
